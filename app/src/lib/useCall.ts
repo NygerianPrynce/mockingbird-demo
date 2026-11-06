@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { Engine } from './conversation'
 import { relaySend, useRelay } from './relay'
+import { keyTone } from './dtmf'
 import { getDemo, setDemo } from '../store'
 
 // One ring, like a phone picking up. Silent if the browser blocks audio until a click.
@@ -39,7 +40,7 @@ export function usePhoneCall(e: Engine) {
     if (m.type === 'hangup') x.wrap()
     if (m.type === 'interim' && x.getPhase() === 'listening') x.hear(m.text ?? '')
     if (m.type === 'final' && x.getPhase() === 'listening' && m.text) x.submit(m.text)
-    if (m.type === 'keycount') x.setKeyCount(Number(m.text) || 0)
+    if (m.type === 'key' && m.text && x.getPhase() === 'listening') { keyTone(m.text); x.setKeyCount((n) => (m.text === '*' ? Math.max(0, n - 1) : n + 1)) }
     if (m.type === 'digits' && m.text) x.enterDigits(m.text)
   })
   useEffect(() => { x_sync() }, [e.phase, e.awaiting])

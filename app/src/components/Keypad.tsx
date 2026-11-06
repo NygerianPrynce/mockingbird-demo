@@ -6,13 +6,14 @@ export function Dots({ n, of, dark }: { n: number; of: number; dark?: boolean })
   return <div className={'kp-dots' + (dark ? ' dark' : '')} aria-label={`${n} of ${of} digits entered`}>{Array.from({ length: of }, (_, i) => <span key={i} className={i < n ? 'on' : ''} />)}</div>
 }
 // Digits are masked. A tone plays on every key, like a phone. * deletes, # submits early (only when complete).
-export function Keypad({ length, label, onDone, onCount, dark }: { length: number; label: string; onDone: (d: string) => void; onCount?: (n: number) => void; dark?: boolean }) {
+export function Keypad({ length, label, onDone, onCount, onKey, silent, dark }: { length: number; label: string; onDone: (d: string) => void; onCount?: (n: number) => void; onKey?: (k: string) => void; silent?: boolean; dark?: boolean }) {
   const [d, setD] = useState('')
   const press = (k: string) => {
-    keyTone(k)
-    if (k === '*') { const n = d.slice(0, -1); setD(n); onCount?.(n.length); return }
+    if (!silent) keyTone(k)
+    if (k === '*') { onKey?.(k); const n = d.slice(0, -1); setD(n); onCount?.(n.length); return }
     if (k === '#') return
     if (d.length >= length) return
+    onKey?.(k)
     const n = d + k
     setD(n); onCount?.(n.length)
     if (n.length === length) setTimeout(() => { onDone(n); setD(''); onCount?.(0) }, 250)

@@ -76,7 +76,7 @@ export default function Phone() {
           <p className="hs-num">{st === 'ringing' ? 'Calling...' : mmss}</p>
           {st === 'connected' && <p className="hs-heard" aria-live="polite">{phase.current === 'listening' ? (heard || 'Go ahead, I’m listening') : ' '}</p>}
           {kp && st === 'connected'
-            ? <div style={{ marginTop: 14 }}><Keypad dark length={kp.length} label={kp.label} onCount={(n) => relaySend({ from: 'phone', type: 'keycount', text: String(n) })} onDone={(d) => relaySend({ from: 'phone', type: 'digits', text: d })} /></div>
+            ? <div style={{ marginTop: 14 }}><Keypad dark length={kp.length} label={kp.label} silent onKey={(k) => relaySend({ from: 'phone', type: 'key', text: k })} onDone={(d) => relaySend({ from: 'phone', type: 'digits', text: d })} /></div>
             : <div className="hs-grid" aria-hidden="true">{['mute', 'keypad', 'speaker'].map((b) => <span key={b}>{b}</span>)}</div>}
           <button className="hs-end" onClick={hang} aria-label="End call"><svg width="30" height="30" viewBox="0 0 24 24" fill="#fff" aria-hidden="true" style={{ transform: 'rotate(135deg)' }}><path d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.6 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.3.2 2.5.6 3.6a1 1 0 0 1-.25 1z" /></svg></button>
         </div>
