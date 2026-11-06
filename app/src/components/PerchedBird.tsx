@@ -1,32 +1,44 @@
-import './bird.css'
-// Idle scene: the Mockingbird logo bird resting on a short navy branch. Every few seconds it flaps and lifts a little, then settles.
-const WING_B = 'M254 190 C214 140 158 94 92 62 Q84.1 88.8 101.2 98.7 Q95.8 124.2 115.3 132.9 Q112.5 157.1 134.5 164.5 Q134.1 187.4 158.7 193.6 Q160.8 215.2 187.8 220.1 Q192.5 240.4 222.0 244.0 Z'
-const WING_F = 'M246 194 C262 150 300 116 356 82 Q353.2 100.2 337.5 108.8 Q334.6 126.6 318.9 134.8 Q315.9 152.2 300.1 160.0 Q297.0 177.0 281.1 184.4 Q278.0 201.0 262.0 208.0 Z'
-const SB = ['M179.4 165.6 L110.6 106.8', 'M185.3 179.9 L123.8 138.6', 'M193.4 193.2 L141.6 168.0', 'M203.5 205.4 L164.1 195.0', 'M215.8 216.5 L191.2 219.6']
-const SF = ['M291.0 162.3 L325.9 122.2', 'M284.8 173.9 L310.3 144.6', 'M278.4 185.2 L294.7 166.3']
-const BODY = 'M332 178 L313 169 C305 153 283 147 265 157 C247 167 233 184 223 203 C207 228 172 262 132 292 L60 322 L86 331 L78 342 C124 326 192 296 226 272 C254 262 290 238 306 205 C312 193 321 184 332 178Z'
+// Idle scene: a side-view Mockingbird (redrawn for animation, same navy and white as the logo) on a short branch.
+// The wing is a fan of separate feathers, so it bends and trails like a real wing. Every few seconds the bird
+// crouches, hops, flaps, and lands. Squash and stretch, blinks, a tail flick, and a shadow that follows the height.
+const LENS = [76, 88, 98, 106, 102, 90, 74]
+const feather = (L: number) => `M0 0 C${L * 0.25} -10 ${L * 0.78} -10 ${L} 0 C${L * 0.78} 10 ${L * 0.25} 10 0 0Z`
 
 export function PerchedBird() {
   return (
-    <svg className="perch" viewBox="20 20 400 360" role="img" aria-label="The Mockingbird bird resting on a branch" preserveAspectRatio="xMidYMid meet">
-      <g fill="none" stroke="#002D65" strokeLinecap="round">
-        <path d="M96 290 C170 280 280 288 380 270" strokeWidth="12" />
-        <path d="M310 282 C328 304 350 314 376 314" strokeWidth="5" />
-        <path d="M170 285 C160 308 142 318 120 320" strokeWidth="4" />
-      </g>
-      <g className="bird">
-        {/* far wing */}
-        <path className="a-wf" d={WING_F} fill="#002D65" />
-        <g stroke="#fff" strokeWidth="3.6" strokeLinecap="round" fill="none">{SF.map((d, i) => <path key={d} className={'a-wfs' + i} d={d} />)}</g>
-        <path d={BODY} fill="#fff" stroke="#fff" strokeWidth="9" strokeLinejoin="round" />
-        <path d={BODY} fill="#002D65" />
-        {/* near wing */}
-        <path className="a-wb" d={WING_B} fill="#fff" stroke="#fff" strokeWidth="9" strokeLinejoin="round" />
-        <path className="a-wb" d={WING_B} fill="#002D65" />
-        <g stroke="#fff" strokeWidth="4.2" strokeLinecap="round" fill="none">{SB.map((d, i) => <path key={d} className={'a-wbs' + i} d={d} />)}</g>
-        <path d="M196 282 L100 326" stroke="#fff" strokeWidth="3.6" strokeLinecap="round" />
-        <circle cx="299" cy="171" r="3.8" fill="#fff" />
-      </g>
+    <svg className="perch" viewBox="20 40 380 300" role="img" aria-label="The Mockingbird bird resting on a branch" preserveAspectRatio="xMidYMid meet">
+      <path d="M70 312 C150 304 280 310 370 298" fill="none" stroke="#002D65" strokeWidth="12" strokeLinecap="round" />
+      <path d="M300 306 C318 322 340 328 362 326" fill="none" stroke="#002D65" strokeWidth="5" strokeLinecap="round" />
+      <ellipse className="shadow" cx="200" cy="322" rx="66" ry="7" fill="#002D65" opacity=".14" />
+      <g transform="translate(200 304)"><g className="bird-all"><g transform="translate(-200 -304)">
+        {/* legs */}
+        <path d="M204 276 L202 306 M228 270 L230 306" stroke="#002D65" strokeWidth="4" strokeLinecap="round" />
+        {/* tail */}
+        <g transform="translate(142 258)"><g className="tail">
+          <path d="M0 -7 L-142 36 L-130 51 L8 13Z" fill="#002D65" stroke="#fff" strokeWidth="3" strokeLinejoin="round" />
+          <path d="M-14 16 L-104 42" stroke="#fff" strokeWidth="3" strokeLinecap="round" />
+        </g></g>
+        {/* body */}
+        <path d="M118 262 C138 226 190 196 240 192 C270 190 288 204 288 222 C288 246 262 270 224 282 C186 294 144 290 118 262Z" fill="#002D65" />
+        <path d="M176 284 C206 288 240 278 262 256" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity=".9" />
+        {/* head */}
+        <g transform="translate(272 194)"><g className="head">
+          <circle cx="0" cy="-6" r="24" fill="#002D65" />
+          <path d="M20 -10 L62 -2 L20 4Z" fill="#002D65" />
+          <g transform="translate(10 -12)"><g className="eye"><circle r="6.5" fill="#fff" /><circle cx="1.6" r="3.3" fill="#002D65" /></g></g>
+        </g></g>
+        {/* wing: seven feathers in a fan; the whole fan swings from the shoulder */}
+        <g transform="translate(214 224)"><g className="wing">
+          {LENS.map((L, i) => (
+            <g key={i} className="fan" style={{ ['--i' as string]: i }}>
+              <g className="feather" style={{ ['--i' as string]: i }}>
+                <path d={feather(L)} fill="#002D65" stroke="#fff" strokeWidth="3" strokeLinejoin="round" />
+                <path d={`M${L * 0.18} 0 L${L * 0.62} 0`} stroke="#fff" strokeWidth="2.6" strokeLinecap="round" />
+              </g>
+            </g>
+          ))}
+        </g></g>
+      </g></g></g>
     </svg>
   )
 }

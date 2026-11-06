@@ -268,3 +268,11 @@ html.print-pdf .reveal .slides section > .slide, html.reveal-print .reveal .slid
 /* Content: the outgoing slide clears quickly, the incoming slide eases in just after, so the two never sit on screen at half strength together. */
 .reveal .slides > section.past, .reveal .slides > section.future { transition-duration: 0.5s; }
 .reveal .slides > section.present { transition-delay: 0.2s; }
+
+/* status quo: a stack of forms that all ask the same questions */
+.lead { font-size: 44px; line-height: 1.32; margin: 0 0 30px; }
+.formstack { display: flex; flex-direction: column; gap: 14px; }
+.formrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 22px; }
+.formrow b { width: 100%; font-size: 30px; color: var(--navy); }
+.formrow span { font-size: 22px; border: 1px solid var(--border); border-radius: 4px; padding: 3px 12px; color: var(--secondary); }
+.formrow span:nth-of-type(-n+4) { color: var(--navy); border-color: var(--navy); font-weight: 700; }
