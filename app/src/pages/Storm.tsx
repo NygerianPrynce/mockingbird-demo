@@ -89,7 +89,7 @@ export default function Storm() {
 
   return (
     <div className="storm">
-      {state !== 'none' && <video ref={vid} className={'storm-video' + (state === 'ready' ? ' ready' : '')} src="/storm.mp4" autoPlay loop playsInline preload="auto" onCanPlay={() => setState('ready')} onError={() => setState('none')} />}
+      {state !== 'none' && <video ref={vid} className={'storm-video' + (state === 'ready' ? ' ready' : '')} src={`${import.meta.env.BASE_URL}storm.mp4`} autoPlay loop playsInline preload="auto" onCanPlay={() => setState('ready')} onError={() => setState('none')} />}
       {state === 'none' && <><div className="storm-frost" aria-hidden="true" /><canvas ref={cv} className="storm-snow" aria-hidden="true" /></>}
       <div className="storm-center">
         <p className="storm-date big">January 24, 2026</p>
@@ -98,6 +98,7 @@ export default function Storm() {
           <li style={{ animationDelay: '4.2s' }}>FEMA Individual Assistance added for 29 counties more than two months after the storm</li>
           <li style={{ animationDelay: '6.4s' }}>Disaster unemployment opened 88 days after the storm</li>
         </ul>
+        <p className="storm-later">Two months later, James calls.</p>
       </div>
     </div>
   )

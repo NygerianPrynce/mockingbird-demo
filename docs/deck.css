@@ -276,3 +276,32 @@ html.print-pdf .reveal .slides section > .slide, html.reveal-print .reveal .slid
 .formrow b { width: 100%; font-size: 30px; color: var(--navy); }
 .formrow span { font-size: 22px; border: 1px solid var(--border); border-radius: 4px; padding: 3px 12px; color: var(--secondary); }
 .formrow span:nth-of-type(-n+4) { color: var(--navy); border-color: var(--navy); font-weight: 700; }
+
+/* Centered content slides: the whole composition sits in the middle, header centered above it */
+.slide.centered { justify-content: center; }
+.slide.centered .grid-2 { flex: 0 0 auto; align-items: center; }
+.slide.centered > .kicker, .slide.centered > h1 { text-align: center; }
+.slide.centered > .rule { margin-left: auto; margin-right: auto; }
+.slide.centered .pull { margin-top: 36px; text-align: center; }
+.slide.centered .chips { justify-content: center; }
+.slide.centered .impact { max-width: 1500px; margin: 0 auto; width: 100%; }
+.slide.centered > .small { text-align: center; }
+
+/* Appendix: production architecture */
+.appx h1 { font-size: 64px; }
+.appx .flow { display: flex; align-items: stretch; margin-top: 4px; }
+.appx .fcol { flex: 1; display: flex; flex-direction: column; gap: 16px; justify-content: flex-start; min-width: 0; }
+.appx .fh { font-size: 20px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--on-navy-muted); text-align: center; }
+.appx .fbox { border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); padding: 16px 20px; line-height: 1.25; }
+.appx .fbox b { display: block; color: #fff; font-size: 27px; margin-bottom: 4px; }
+.appx .fbox span { color: var(--on-navy-muted); font-size: 21px; line-height: 1.3; display: block; }
+.appx .fbox.key { border-color: var(--red); border-width: 2px; }
+.appx .farr { width: 64px; display: flex; align-items: center; justify-content: center; font-size: 44px; color: var(--on-navy-muted); flex: none; }
+
+.slide.tight { padding-top: 56px; padding-bottom: 56px; }
+.slide.tight h1 { font-size: 72px; }
+.slide.tight .rule { margin: 20px auto 26px; }
+.slide.tight .formstack { gap: 10px; }
+.slide.tight .formrow { padding: 10px 20px; gap: 6px 10px; }
+.slide.tight .formrow b { font-size: 27px; }
+.slide.tight .pull { margin-top: 22px; padding-top: 18px; font-size: 40px; }

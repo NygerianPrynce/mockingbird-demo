@@ -3,7 +3,6 @@ import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import os from 'node:os'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 import { defineConfig, loadEnv } from 'vite'
 import type { Plugin } from 'vite'
@@ -46,37 +45,8 @@ function elevenLabs(env: Record<string, string>): Plugin {
   }
 }
 
-// Phone relay: the "handset" page (/#/phone) sends speech to the presenter screen over server-sent events.
-function phoneRelay(): Plugin {
-  const clients = new Set<ServerResponse>()
-  const handler = async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
-    if (req.url === '/api/relay' && req.method === 'GET') {
-      res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache', connection: 'keep-alive' })
-      res.write(':ok\n\n')
-      clients.add(res)
-      const hb = setInterval(() => res.write(':hb\n\n'), 15000)
-      req.on('close', () => { clearInterval(hb); clients.delete(res) })
-      return
-    }
-    if (req.url === '/api/relay/send' && req.method === 'POST') {
-      let body = ''
-      for await (const c of req) body += c
-      for (const c of clients) c.write(`data: ${body}\n\n`)
-      res.end('ok')
-      return
-    }
-    if (req.url === '/api/info') {
-      const ips = Object.values(os.networkInterfaces()).flat().filter((i) => i && i.family === 'IPv4' && !i.internal).map((i) => i!.address)
-      res.setHeader('content-type', 'application/json')
-      res.end(JSON.stringify({ ips, port: (req.headers.host ?? '').split(':')[1] ?? '', https: !!(req.socket as unknown as { encrypted?: boolean }).encrypted }))
-      return
-    }
-    next()
-  }
-  return { name: 'phone-relay', configureServer(s) { s.middlewares.use(handler) }, configurePreviewServer(s) { s.middlewares.use(handler) } }
-}
-
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), elevenLabs(loadEnv(mode, process.cwd(), '')), phoneRelay(), ...(process.env.HTTPS ? [basicSsl()] : [])],
+  plugins: [react(), elevenLabs(loadEnv(mode, process.cwd(), '')), ...(process.env.HTTPS ? [basicSsl()] : [])],
+  base: process.env.BASE || '/',
   server: { host: true },
 }))

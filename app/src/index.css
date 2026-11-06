@@ -477,6 +477,7 @@ p { margin: 0 0 1em; }
 .storm-bullets { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; max-width: 780px; text-align: left; }
 .storm-bullets li { color: #fff; font-size: 1.5rem; font-weight: 600; padding-left: 28px; position: relative; opacity: 0; transform: translateY(14px); animation: bulletIn 1s var(--ease) forwards; text-shadow: 0 1px 12px rgba(0,0,0,.7); }
 .storm-bullets li::before { content: ''; position: absolute; left: 0; top: .55em; width: 10px; height: 10px; border-radius: 50%; background: var(--tn-red); }
+.storm-later { margin: 30px 0 0; font-family: var(--serif); font-size: 2.1rem; color: #fff; opacity: 0; transform: translateY(14px); animation: bulletIn 1.2s var(--ease) 9.2s forwards; text-shadow: 0 2px 18px rgba(0,0,0,.7); }
 @keyframes bulletIn { to { opacity: 1; transform: none; } }
 
 /* fatter timeline cards */

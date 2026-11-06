@@ -25,7 +25,7 @@ export default function Phone() {
 
   const sync = () => {
     if (!listener.current) listener.current = createListener({
-      onInterim: (t) => { setHeard(t); relaySend({ from: 'phone', type: 'interim', text: t }) },
+      onInterim: (t) => setHeard(t),
       onFinal: (t) => { setHeard(t); relaySend({ from: 'phone', type: 'final', text: t }) },
       onError: (m) => setErr(m),
     })

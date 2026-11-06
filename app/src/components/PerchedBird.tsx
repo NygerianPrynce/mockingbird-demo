@@ -55,7 +55,7 @@ export function PerchedBird() {
       <div className="perch-stage">
         <div className="perch-shadow" ref={shadow} />
         <div className="perch-bird" ref={bird}>
-          {Array.from({ length: N }, (_, i) => <img key={i} ref={(el) => { imgs.current[i + 1] = el }} src={`/bird3/f${i + 1}.svg`} alt="" draggable={false} style={{ opacity: i + 1 === 9 ? 1 : 0 }} />)}
+          {Array.from({ length: N }, (_, i) => <img key={i} ref={(el) => { imgs.current[i + 1] = el }} src={`${import.meta.env.BASE_URL}bird3/f${i + 1}.svg`} alt="" draggable={false} style={{ opacity: i + 1 === 9 ? 1 : 0 }} />)}
         </div>
         <svg className="perch-branch" viewBox="0 0 980 820" aria-hidden="true">
           {/* limb */}

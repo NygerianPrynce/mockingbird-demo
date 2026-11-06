@@ -52,9 +52,19 @@ export const VOICE_RATE = 1.1
 let actx: AudioContext | null = null
 let analyser: AnalyserNode | null = null
 let buf: Uint8Array<ArrayBuffer> | null = null
+// Presenter talk-over: lower the AI's volume without touching the conversation. The orb keeps its full level.
+let duckGain: GainNode | null = null
+let duckLevel = 1
+const DUCK = 0.16
+export function setDuck(on: boolean) {
+  duckLevel = on ? DUCK : 1
+  if (duckGain && actx) duckGain.gain.setTargetAtTime(duckLevel, actx.currentTime, 0.2)
+  else if (current) current.audio.volume = duckLevel
+}
+export const isDucked = () => duckLevel < 1
 function hookAnalyser(audio: HTMLAudioElement) {
   try {
-    if (!actx) { actx = new AudioContext(); analyser = actx.createAnalyser(); analyser.fftSize = 512; analyser.smoothingTimeConstant = 0.6; analyser.connect(actx.destination); buf = new Uint8Array(analyser.fftSize) }
+    if (!actx) { actx = new AudioContext(); analyser = actx.createAnalyser(); analyser.fftSize = 512; analyser.smoothingTimeConstant = 0.6; duckGain = actx.createGain(); duckGain.gain.value = duckLevel; analyser.connect(duckGain); duckGain.connect(actx.destination); buf = new Uint8Array(analyser.fftSize) }
     if (actx.state === 'suspended') void actx.resume()
     actx.createMediaElementSource(audio).connect(analyser!)
   } catch { /* level stays 0, orb falls back to a synthetic pulse */ }
@@ -85,12 +95,13 @@ async function fetchAudio(text: string): Promise<string | null> {
   try {
     const h = await sha1(text)
     if (h) {
-      const cached = await fetch(`/voice/${h}.mp3`)
+      const cached = await fetch(`${import.meta.env.BASE_URL}voice/${h}.mp3`)
       if (cached.ok && (cached.headers.get('content-type') ?? '').startsWith('audio')) return URL.createObjectURL(await cached.blob())
     }
     for (let attempt = 0; attempt < 2; attempt++) {
       const r = await slot(() => fetch('/api/tts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text }) }))
       if (r.ok) return URL.createObjectURL(await r.blob())
+      if (r.status === 404 || r.status === 405) break // hosted build: no generator, cached lines only
       await new Promise((x) => setTimeout(x, 1200))
     }
   } catch { /* fall through to browser voice */ }
@@ -134,6 +145,7 @@ function speakBrowser(text: string): Promise<void> {
       if (voice) u.voice = voice
       u.lang = 'en-US'
       u.rate = 0.95
+      u.volume = duckLevel
       if (i === parts.length - 1) { u.onend = () => resolve(); u.onerror = () => resolve() }
       speechSynthesis.speak(u)
     })
@@ -149,6 +161,7 @@ export async function speak(text: string, enabled: boolean): Promise<void> {
       const audio = new Audio(url)
       audio.playbackRate = VOICE_RATE
       hookAnalyser(audio)
+      audio.volume = duckGain ? 1 : duckLevel
       const done = () => { if (current?.audio === audio) current = null; resolve() }
       current = { audio, done }
       audio.onended = done

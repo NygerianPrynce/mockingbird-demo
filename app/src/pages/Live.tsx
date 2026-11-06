@@ -9,24 +9,22 @@ import icon from '../assets/mockingbird-icon.svg'
 
 // BEAT 3 + 4 (SCRIPTED BY INTENT). The caller can say anything; the AI's questions and the form values follow the script.
 const STEPS: Step[] = [
-  { ask: 'Welcome to the Mockingbird hotline. If you are in immediate danger, hang up and call 911. Are you in immediate danger?', cue: 'No, we\u2019re safe.', expect: 'no', danger: 'Hang up and call 911 now. Stay safe.', onAsk: ['caller'] },
+  { ask: 'Mockingbird hotline. Are you in immediate danger?', cue: 'No, we\u2019re safe.', expect: 'no', danger: 'Hang up and call 911 now. Stay safe.', onAsk: ['caller'] },
   { ask: 'Do you know your Mockingbird ID?', cue: 'No, I don\u2019t remember it.', onAsk: ['verifying'] },
   { ask: 'No problem. Enter your date of birth on the keypad.', cue: '(Tap your date of birth on the keypad)',
     keypad: { length: 8, label: 'Date of birth: MM DD YYYY', verify: (d) => d === identity.dob, fail: 'That doesn\u2019t match. Try again.', demo: () => identity.dob }, fills: ['dobOk'] },
-  { ask: 'Now your ZIP code.', cue: '(Tap your ZIP code on the keypad)',
+  { ask: 'And your ZIP code.', cue: '(Tap your ZIP code on the keypad)',
     keypad: { length: 5, label: 'Home ZIP code', verify: (d) => d === identity.zip, fail: 'That doesn\u2019t match. Try again.', demo: () => identity.zip }, fills: ['verified'] },
-  { ask: 'Verified. What happened, James?', cue: 'The ice storm knocked out power and my warehouse closed. They said we\u2019re out of work for now.', onAsk: ['verified'], fills: ['situation'] },
-  { ask: 'Your warehouse closed from the storm, so you\u2019re likely eligible for Tennessee Disaster Unemployment Assistance. I can prepare the application for you to review and submit. Want me to?',
+  { ask: 'Verified. What\u2019s going on, James?', cue: 'The ice storm closed my warehouse, and I\u2019m still out of work.', onAsk: ['verified'], fills: ['situation'] },
+  { ask: 'I\u2019m so sorry to hear that, James. You\u2019re likely eligible for Tennessee Disaster Unemployment Assistance, which is open now. Want to start that form?',
     cue: 'Yes, let\u2019s do it.', expect: 'yes', retry: 'Say yes to continue.', onAsk: ['eligibility'], fills: ['profileFields'] },
-  { ask: 'I have your name, address, household, and employer. What was your last day of work, and what do you earn in a week?', cue: 'Friday the twenty-third, about seven hundred a week.', fills: ['lastWorked', 'disasterInfo', 'earnings'] },
-  { ask: 'Have you filed for regular unemployment yet?', cue: 'No, I haven\u2019t.', fills: ['filed'] },
-  { ask: 'File regular unemployment first: Lack of Work, then Disaster related closure. Then apply for DUA, a separate federal benefit, for extra weeks. Do it now, even before DUA opens. Got it?',
-    cue: 'Yes, that makes sense.', expect: 'yes', retry: 'Say yes, or ask me to repeat.', onAsk: ['trap'], fills: ['duaStatus'] },
-  { ask: 'Let me confirm. Hourly warehouse worker, Davidson County. Warehouse closed from the ice storm. Last worked January 23rd. About seven hundred a week. Not filed yet. Correct?',
+  { ask: 'What was your last day of work, and what do you usually earn in a week?', cue: 'Friday the twenty-third, about seven hundred a week.', fills: ['lastWorked', 'disasterInfo', 'earnings'] },
+  { ask: 'Have you filed for regular unemployment yet?', cue: 'Yes, I have.', fills: ['filed', 'duaStatus'] },
+  { ask: 'To confirm: laid off by the storm, last worked January 23rd, about seven hundred a week, already filed. Correct?',
     cue: 'Yes, that\u2019s right.', expect: 'yes', retry: 'What should I fix?', onAsk: ['readback'], fills: ['confirmed'] },
-  { ask: 'Your application is ready. You review and submit it. Within 21 days of filing, you\u2019ll need your Social Security number, typed securely, a paystub or tax return, and proof of employment. Anything else you need right now?',
-    cue: 'We\u2019re running low on food, actually.', onAsk: ['docs'], fills: ['foodNeed'] },
-  { ask: 'Got it, food. I\u2019ve sent that to responders in Davidson County. Warming centers are open at the Fairgrounds, Madison, and Southeast community centers, and Second Harvest has food pantries. Also, photograph any damage and keep your receipts. I\u2019ll text you all of this. Stay safe, James.', cue: '', expect: 'none', onAsk: ['reminder'] },
+  { ask: 'Your application is ready for you to review and submit. Within 21 days, you\u2019ll need your Social Security number, a paystub, and proof of employment. Anything else you need right now?',
+    cue: 'We\u2019re behind on rent.', onAsk: ['docs'], fills: ['rentNeed'] },
+  { ask: 'Got it. I\u2019ve flagged rent help for Davidson County, and I\u2019ll text you the next steps. Take care, James.', cue: '', expect: 'none', onAsk: ['reminder'] },
 ]
 
 type Row = { key: string; label: string; value: string; src: 'profile' | 'call' }
@@ -51,9 +49,8 @@ const DUA: { sec: string; rows: Row[] }[] = [
     { key: 'disasterInfo', label: 'Date work stopped', value: 'January 24, 2026', src: 'call' },
   ] },
   { sec: 'D. Filing status', rows: [
-    { key: 'filed', label: 'Filed state unemployment', value: 'No', src: 'call' },
-    { key: 'duaStatus', label: 'First step', value: 'File regular claim: “Lack of Work,” then “Disaster related closure”', src: 'call' },
-    { key: 'duaStatus', label: 'DUA status', value: 'Not open yet for Davidson. We will tell you the moment it opens.', src: 'call' },
+    { key: 'filed', label: 'Filed state unemployment', value: 'Yes', src: 'call' },
+    { key: 'duaStatus', label: 'DUA status', value: 'Open for Davidson. Application prepared.', src: 'call' },
   ] },
 ]
 const SCAN: { name: string; out: string; hit?: boolean }[] = [
@@ -101,7 +98,7 @@ export default function Live() {
                   {!has('verified') && <span className="tag amber">{has('verifying') ? 'Verifying' : 'Not verified yet'}</span>}
                   {has('verified') && <span className="tag green">Identity verified</span>}
                   {has('eligibility') && <span className="tag blue">Eligible: DUA</span>}
-                  {has('foodNeed') && <span className="tag amber">Need: food</span>}
+                  {has('rentNeed') && <span className="tag amber">Need: rent help</span>}
                 </>
               )}
             </div>
@@ -138,7 +135,6 @@ export default function Live() {
             <>
               <header><h3>Disaster Unemployment Assistance</h3><span className="tag grey">Prepared for James to review and submit</span></header>
               <div className="body">
-                {has('trap') && <div className="inset slide trapbox"><b>First:</b> file regular state unemployment. Pick &ldquo;Lack of Work,&rdquo; then &ldquo;Disaster related closure.&rdquo; DUA is a separate federal benefit, so apply for it too.</div>}
                 <div className="dua-grid">
                   {DUA.map((sec) => (
                     <div key={sec.sec}>
@@ -164,7 +160,6 @@ export default function Live() {
               <div className={'formcard' + (tuck ? ' tuck' : '')}>
                 <div className="stagebox"><span className="tag green">Form saved</span><h2>Disaster Unemployment Assistance</h2><p className="muted">Eligible &bull; ready for James to review and submit</p></div>
               </div>
-              {!tuck && <img src={icon} width={64} height={64} alt="" className="flybird" />}
               <div className={'profilecard' + (tuck ? ' show' : '')}>
                 <h2>James&rsquo;s profile</h2>
                 <dl className="summary">
