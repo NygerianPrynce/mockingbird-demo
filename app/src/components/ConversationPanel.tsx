@@ -10,19 +10,23 @@ const STATUS: Record<string, string> = { idle: '', speaking: 'Mockingbird', list
 export function CallPanel({ e, userLabel, size = 230 }: { e: Engine; userLabel: string; size?: number }) {
   const box = useRef<HTMLDivElement>(null)
   useEffect(() => { if (box.current) box.current.scrollTop = box.current.scrollHeight }, [e.lines.length, e.interim])
+  const idle = e.phase === 'idle'
   return (
-    <section className={'callpanel' + (e.phase === 'idle' ? ' idle' : '')} aria-label="Call with Mockingbird">
-      {e.phase === 'idle' ? <PerchedBird /> : <><div className="orbwrap"><Orb phase={e.phase} size={size} /></div>
-      <p className="orb-status">{STATUS[e.phase]}</p></>}
-      <div className="transcript dark" ref={box} aria-live="polite">
-        {e.lines.map((l) => (
-          <div key={l.id} className={'tline ' + (l.who === 'AI' ? 'ai' : 'you')}><span className="who">{l.who === 'AI' ? 'Mockingbird' : userLabel}</span><span>{l.text}</span></div>
-        ))}
-        {e.interim && <div className="tline you interim"><span className="who">{userLabel}</span><span>{e.interim}</span></div>}
+    <section className={'callpanel' + (idle ? ' idle' : '')} aria-label="Call with Mockingbird">
+      <div className="scene bird-scene"><PerchedBird /></div>
+      <div className="scene call-scene">
+        <div className="orbwrap"><Orb phase={e.phase} size={size} /></div>
+        <p className="orb-status">{STATUS[e.phase]}</p>
+        <div className="transcript dark" ref={box} aria-live="polite">
+          {e.lines.map((l) => (
+            <div key={l.id} className={'tline ' + (l.who === 'AI' ? 'ai' : 'you')}><span className="who">{l.who === 'AI' ? 'Mockingbird' : userLabel}</span><span>{l.text}</span></div>
+          ))}
+          {e.interim && <div className="tline you interim"><span className="who">{userLabel}</span><span>{e.interim}</span></div>}
+        </div>
+        {e.awaiting && e.phase === 'listening' && (
+          <div className="kp-wait"><p>{e.awaiting.label}</p><Dots dark n={e.keyCount} of={e.awaiting.length} /></div>
+        )}
       </div>
-      {e.awaiting && e.phase === 'listening' && (
-        <div className="kp-wait"><p>{e.awaiting.label}</p><Dots dark n={e.keyCount} of={e.awaiting.length} /></div>
-      )}
     </section>
   )
 }
