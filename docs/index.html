@@ -263,44 +263,57 @@
 </section>
 
 <!-- 8. APPENDIX: PRODUCTION ARCHITECTURE -->
+<section data-background-color="#002D65">
+  <div class="slide appx dark theme-navy">
+    <p class="kicker anim" style="--d:.3s">Appendix</p>
+    <h1 class="anim" style="--d:.42s">Sources.</h1>
+    <div class="rule"></div>
+    <ul class="srcgrid anim" style="--d:.7s"><li><b>TEMA, January 2026 Winter Weather</b><span>tn.gov/tema</span></li><li><b>TDLWD, DUA in 29 counties (Apr 22, 2026)</b><span>tn.gov/workforce</span></li><li><b>TDLWD, Disaster Unemployment page</b><span>tn.gov/workforce/unemployment/disaster-unemployment</span></li><li><b>TDLWD, DUA documentation requirements (2025)</b><span>tn.gov/workforce</span></li><li><b>WKRN, FEMA IA added for 29 counties</b><span>wkrn.com</span></li><li><b>WSMV, IA deadline (May 13, 2026)</b><span>wsmv.com</span></li><li><b>WVLT, FEMA approvals (Jun 9, 2026)</b><span>wvlt.tv</span></li><li><b>ABC News 4 and NewsChannel 9, NES outages</b><span>abcnews4.com · newschannel9.com</span></li><li><b>GAO-20-503, FEMA Individuals and Households Program (Sept 30, 2020)</b><span>gao.gov/products/gao-20-503</span></li><li><b>GOV.UK Design System (patterns only, no branding)</b><span>design-system.service.gov.uk</span></li><li><b>Map data: US Census county boundaries, Esri Light Gray tiles</b><span>census.gov · esri.com</span></li></ul>
+    <p class="small muted" style="margin-top:22px;">Full links and the fact-by-fact table are in the written appendix (appendix.html).</p>
+  </div>
+  <aside class="notes">
+    APPENDIX · Sources. Not part of the 8-minute talk. Every number on the slides comes from one of these. Full URLs, and which fact maps to which source, are in appendix.html (A1 to A3). The map data in the demo is made up; only the county shapes and basemap are real.
+  </aside>
+</section>
+
 <section data-background-color="#001C40">
   <div class="slide centered appx dark theme-deep">
-    <p class="kicker anim" style="--d:.3s">Appendix &nbsp;·&nbsp; In production</p>
-    <h1 class="anim" style="--d:.42s">What Mockingbird looks like behind the call.</h1>
+    <p class="kicker anim" style="--d:.3s">Appendix &nbsp;·&nbsp; Backend tech stack</p>
+    <h1 class="anim" style="--d:.42s">Backend tech stack.</h1>
     <div class="rule"></div>
     <div class="flow anim" style="--d:.7s">
       <div class="fcol">
         <div class="fh">Reach</div>
-        <div class="fbox"><b>Phone call</b><span>Toll-free number, works on any phone</span></div>
-        <div class="fbox"><b>Text message</b><span>When signal is weak, messages queue</span></div>
-        <div class="fbox"><b>Web</b><span>Same profile, same assistant</span></div>
+        <div class="fbox"><b>Phone call</b><span>Twilio Programmable Voice, toll-free number</span></div>
+        <div class="fbox"><b>Text message</b><span>Twilio SMS, messages queue when signal is weak</span></div>
+        <div class="fbox"><b>Web</b><span>React + TypeScript, same profile and assistant</span></div>
       </div>
       <div class="farr">&rarr;</div>
       <div class="fcol">
         <div class="fh">Understand</div>
-        <div class="fbox"><b>Voice and text gateway</b><span>Telephony, speech to text, text to speech</span></div>
-        <div class="fbox key"><b>Secure keypad capture</b><span>Date of birth and SSN go to the vault, never to the AI or the transcript</span></div>
-        <div class="fbox"><b>Conversation engine</b><span>LLM with guardrails: 911 first, scripted flows, no free-form advice</span></div>
+        <div class="fbox"><b>Voice gateway</b><span>Streaming speech to text; ElevenLabs text to speech</span></div>
+        <div class="fbox key"><b>Secure keypad capture</b><span>Keypad tones (DTMF) go straight to the vault, never to the AI or transcript</span></div>
+        <div class="fbox"><b>Conversation engine</b><span>Claude API with guardrails: 911 first, scripted flows</span></div>
       </div>
       <div class="farr">&rarr;</div>
       <div class="fcol">
         <div class="fh">Know</div>
-        <div class="fbox"><b>Profile vault</b><span>Encrypted at rest, consent logged, deletable</span></div>
-        <div class="fbox"><b>Program rules engine</b><span>Eligibility, deadlines, required documents</span></div>
-        <div class="fbox"><b>Declaration monitor</b><span>FEMA, TEMA and TDLWD feeds tell us the moment a program opens</span></div>
+        <div class="fbox"><b>Profile vault</b><span>PostgreSQL, field-level encryption (KMS), consent logged</span></div>
+        <div class="fbox"><b>Program rules engine</b><span>Versioned rules: eligibility, deadlines, documents</span></div>
+        <div class="fbox"><b>Declaration monitor</b><span>Scheduled workers poll OpenFEMA, TEMA and TDLWD</span></div>
       </div>
       <div class="farr">&rarr;</div>
       <div class="fcol">
         <div class="fh">Deliver</div>
-        <div class="fbox key"><b>Prepared forms and plan</b><span>The survivor reviews and submits. We never file for them.</span></div>
-        <div class="fbox"><b>Reminders</b><span>Text and email: deadlines, documents, new programs</span></div>
-        <div class="fbox"><b>Responder dashboard</b><span>De-identified, aggregated signals by county</span></div>
+        <div class="fbox key"><b>Prepared forms and plan</b><span>Pre-filled PDFs. The survivor reviews and submits.</span></div>
+        <div class="fbox"><b>Reminders</b><span>Twilio SMS and email: deadlines, documents, new programs</span></div>
+        <div class="fbox"><b>Responder dashboard</b><span>React + Leaflet, de-identified counts by county</span></div>
       </div>
     </div>
-    <p class="small muted anim" style="--d:1.2s; text-align:center; margin-top:26px;">Audit log on every step &nbsp;·&nbsp; human review before anything is submitted &nbsp;·&nbsp; responders see counts, never names</p>
+    <p class="small muted anim" style="--d:1.2s; text-align:center; margin-top:26px;">Proposed production stack, hosted on AWS with an audit log on every step. <b>Today's demo</b> runs on React + Vite, Chrome speech recognition, ElevenLabs voice, an ntfy.sh relay and GitHub Pages, with made-up data.</p>
   </div>
   <aside class="notes">
-    APPENDIX · Production architecture. Not part of the 8-minute talk. Use in Q&A.
+    APPENDIX · Backend tech stack. Not part of the 8-minute talk. Use in Q&A. This is the proposed production stack, not what is built.
     Left to right: people reach us by call, text or web. The gateway turns speech into text. Sensitive digits go straight from the keypad to an encrypted vault and never reach the AI or the transcript. The conversation engine is an LLM with guardrails and scripted flows. It reads the profile vault, the rules engine (eligibility, deadlines, documents) and a monitor that watches declarations so we can tell people the moment a program opens. Output is a prepared form and a plan for the survivor to review and submit, text reminders, and a de-identified county dashboard for responders.
     The demo you saw is a thin slice of this: the conversation engine, a profile, a rules table and the dashboard, with made-up data.
   </aside>

@@ -78,7 +78,6 @@ export default function App() {
         </nav>
         <Stopwatch />
       </header>
-      {needsClick && <div className="arm">Click once to enable sound</div>}
       <main key={route.path}>{route.el}</main>
       <Dock />
     </>

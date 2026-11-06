@@ -305,3 +305,9 @@ html.print-pdf .reveal .slides section > .slide, html.reveal-print .reveal .slid
 .slide.tight .formrow { padding: 10px 20px; gap: 6px 10px; }
 .slide.tight .formrow b { font-size: 27px; }
 .slide.tight .pull { margin-top: 22px; padding-top: 18px; font-size: 40px; }
+
+/* Appendix: sources */
+.appx .srcgrid { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: 64px; }
+.appx .srcgrid li { break-inside: avoid; margin-bottom: 18px; line-height: 1.25; }
+.appx .srcgrid b { display: block; color: #fff; font-size: 26px; }
+.appx .srcgrid span { color: var(--on-navy-muted); font-size: 20px; }
