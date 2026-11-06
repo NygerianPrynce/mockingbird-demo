@@ -2,20 +2,21 @@ import { useEffect, useRef } from 'react'
 
 // Idle scene: the Mockingbird bird on a short navy branch, animated frame by frame from the illustrated pose sheet.
 // Flap frames are aligned on the eye so the head stays steady; ground frames are aligned on the feet.
-// Loop (9s): rests, looks up, crouches, launches, three wingbeats of 8 frames, lands, settles.
+// Loop (5.2s): rests ~2s, looks up, crouches, launches, four wingbeats of 8 frames, lands, settles.
 const N = 14
 const CYCLE = [1, 2, 3, 4, 5, 6, 7, 8]
-type Seg = [number, number, number] // frame, start, end (fractions of the loop)
+type Seg = [number, number, number] // frame, start, end (seconds into the loop)
+const LOOP = 5.2
 function timeline(): Seg[] {
-  const segs: Seg[] = [[9, 0, 0.3], [10, 0.3, 0.35], [9, 0.35, 0.56], [11, 0.56, 0.59], [12, 0.59, 0.612]]
-  const flapStart = 0.612, flapEnd = 0.83, count = CYCLE.length * 4
+  const segs: Seg[] = [[9, 0, 0.5], [10, 0.5, 0.8], [9, 0.8, 1.3], [11, 1.3, 1.57], [12, 1.57, 1.77]]
+  const flapStart = 1.77, flapEnd = 3.73, count = CYCLE.length * 4
   for (let i = 0; i < count; i++) segs.push([CYCLE[i % CYCLE.length], flapStart + ((flapEnd - flapStart) * i) / count, flapStart + ((flapEnd - flapStart) * (i + 1)) / count])
-  segs.push([13, 0.83, 0.855], [14, 0.855, 0.9], [9, 0.9, 1.0001])
+  segs.push([13, 3.73, 3.955], [14, 3.955, 4.36], [9, 4.36, LOOP + 0.001])
   return segs
 }
 const SEGS = timeline()
 // vertical lift as a fraction of the stage height
-const HOP: [number, number][] = [[0, 0], [0.56, 0], [0.59, -0.012], [0.612, -0.05], [0.67, -0.1], [0.76, -0.12], [0.83, -0.06], [0.87, 0], [1, 0]]
+const HOP: [number, number][] = [[0, 0], [1.3, 0], [1.57, -0.012], [1.77, -0.05], [2.3, -0.1], [3.1, -0.12], [3.73, -0.06], [4.1, 0], [LOOP, 0]]
 const SIT = 0.016 // settle the feet onto the limb
 const hopAt = (t: number) => {
   for (let i = 1; i < HOP.length; i++) if (t <= HOP[i][0]) { const [t0, y0] = HOP[i - 1], [t1, y1] = HOP[i]; const k = (t - t0) / (t1 - t0); return y0 + (y1 - y0) * (k * k * (3 - 2 * k)) }
@@ -30,16 +31,17 @@ export function PerchedBird() {
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) { if (imgs.current[9]) imgs.current[9]!.style.opacity = '1'; return }
     let raf = 0
     const t0 = performance.now()
-    const BLEND = 0.012 // about 110ms: ground poses melt into each other instead of cutting
+    const BLEND = 0.12 // seconds: the next ground pose fades in over the previous one, which stays solid underneath (no see-through dip)
     const ground = (f: number) => f >= 9
     const tick = (now: number) => {
-      const t = ((now - t0) % 9000) / 9000
+      const t = ((now - t0) / 1000) % LOOP
       let i = SEGS.findIndex((x) => t >= x[1] && t < x[2]); if (i < 0) i = 0
       const seg = SEGS[i], next = SEGS[(i + 1) % SEGS.length]
       const op: Record<number, number> = { [seg[0]]: 1 }
+      let top = seg[0]
       const left = seg[2] - t
-      if (next[0] !== seg[0] && (ground(seg[0]) || ground(next[0])) && left < BLEND) { const k = 1 - left / BLEND; op[seg[0]] = 1 - k; op[next[0]] = k }
-      for (let f = 1; f <= N; f++) { const el = imgs.current[f]; if (el) { const v = String(op[f] ?? 0); if (el.style.opacity !== v) el.style.opacity = v } }
+      if (next[0] !== seg[0] && (ground(seg[0]) || ground(next[0])) && left < BLEND) { op[next[0]] = 1 - left / BLEND; top = next[0] }
+      for (let f = 1; f <= N; f++) { const el = imgs.current[f]; if (el) { const v = String(op[f] ?? 0); if (el.style.opacity !== v) el.style.opacity = v; const z = f === top ? '2' : '1'; if (el.style.zIndex !== z) el.style.zIndex = z } }
       const y = hopAt(t) + SIT
       if (bird.current) bird.current.style.transform = `translateY(${y * 100}%)`
       if (shadow.current) shadow.current.style.transform = `scaleX(${1 + (y - SIT) * 3.5})`
