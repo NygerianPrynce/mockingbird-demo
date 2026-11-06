@@ -494,24 +494,9 @@ p { margin: 0 0 1em; }
 
 /* ---- perched bird sprite: blinks, then crouches, hops, flaps three times, lands (9s loop) ---- */
 .perch { width: 100%; display: flex; justify-content: center; }
-.perch-stage { position: relative; width: min(560px, 90%); aspect-ratio: 900 / 780; }
-.perch-bird { position: absolute; left: 0; right: 0; top: 0; height: 100%; transform-origin: 70% 92%; animation: bhop 9s ease-in-out infinite; }
+.perch-stage { position: relative; width: min(560px, 90%); aspect-ratio: 980 / 820; }
+.perch-bird { position: absolute; inset: 0; will-change: transform; }
 .perch-bird img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0; user-select: none; }
-.perch-branch { position: absolute; left: 34%; right: 10%; bottom: 18.6%; height: 2.4%; background: var(--tn-navy); border-radius: 999px; transform: rotate(-.6deg); }
-.perch-shadow { position: absolute; left: 40%; right: 14%; bottom: 16%; height: 3.4%; border-radius: 50%; background: rgba(0, 45, 101, .16); transform-origin: center; animation: bshadow 9s ease-in-out infinite; }
+.perch-branch { position: absolute; left: 40%; right: 18%; bottom: 24.6%; height: 2.4%; background: var(--tn-navy); border-radius: 999px; transform: rotate(-.6deg); }
+.perch-shadow { position: absolute; left: 44%; right: 22%; bottom: 22%; height: 3%; border-radius: 50%; background: rgba(0, 45, 101, .16); transform-origin: center; }
 
-/* sprite timeline (9s): perch, crouch, launch, three flaps, land */
-.f-perch { animation: s-perch 9s linear infinite; }
-@keyframes s-perch { 0% { opacity: 1; } 55.99% { opacity: 1; } 56% { opacity: 0; } 90.99% { opacity: 0; } 91% { opacity: 1; } 99.99% { opacity: 1; } 100% { opacity: 0; } }
-.f-crouch { animation: s-crouch 9s linear infinite; }
-@keyframes s-crouch { 0% { opacity: 0; } 55.99% { opacity: 0; } 56% { opacity: 1; } 59.99% { opacity: 1; } 60% { opacity: 0; } 86.99% { opacity: 0; } 87% { opacity: 1; } 90.99% { opacity: 1; } 91% { opacity: 0; } 100% { opacity: 0; } }
-.f-launch { animation: s-launch 9s linear infinite; }
-@keyframes s-launch { 0% { opacity: 0; } 59.99% { opacity: 0; } 60% { opacity: 1; } 62.99% { opacity: 1; } 63% { opacity: 0; } 83.99% { opacity: 0; } 84% { opacity: 1; } 86.99% { opacity: 1; } 87% { opacity: 0; } 100% { opacity: 0; } }
-.f-up { animation: s-up 9s linear infinite; }
-@keyframes s-up { 0% { opacity: 0; } 62.99% { opacity: 0; } 63% { opacity: 1; } 65.99% { opacity: 1; } 66% { opacity: 0; } 71.99% { opacity: 0; } 72% { opacity: 1; } 74.99% { opacity: 1; } 75% { opacity: 0; } 80.99% { opacity: 0; } 81% { opacity: 1; } 83.99% { opacity: 1; } 84% { opacity: 0; } 100% { opacity: 0; } }
-.f-level { animation: s-level 9s linear infinite; }
-@keyframes s-level { 0% { opacity: 0; } 65.99% { opacity: 0; } 66% { opacity: 1; } 68.99% { opacity: 1; } 69% { opacity: 0; } 74.99% { opacity: 0; } 75% { opacity: 1; } 77.99% { opacity: 1; } 78% { opacity: 0; } 100% { opacity: 0; } }
-.f-down { animation: s-down 9s linear infinite; }
-@keyframes s-down { 0% { opacity: 0; } 68.99% { opacity: 0; } 69% { opacity: 1; } 71.99% { opacity: 1; } 72% { opacity: 0; } 77.99% { opacity: 0; } 78% { opacity: 1; } 80.99% { opacity: 1; } 81% { opacity: 0; } 100% { opacity: 0; } }
-@keyframes bhop { 0%, 55% { transform: none; } 58% { transform: translateY(1%) scale(1.02, .97); } 62% { transform: translateY(-3%); } 68% { transform: translateY(-9%); } 76% { transform: translateY(-11%); } 83% { transform: translateY(-8%); } 87% { transform: translateY(-2%); } 90% { transform: translateY(1%) scale(1.02, .97); } 94%, 100% { transform: none; } }
-@keyframes bshadow { 0%, 58% { transform: none; opacity: 1; } 70% { transform: scaleX(.65); opacity: .5; } 86% { transform: scaleX(.9); } 92%, 100% { transform: none; opacity: 1; } }
