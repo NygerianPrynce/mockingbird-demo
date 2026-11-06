@@ -48,6 +48,24 @@ const blobs = new Map<string, Promise<string | null>>()
 let current: { audio: HTMLAudioElement; done: () => void } | null = null
 // Conversational pace: play ElevenLabs audio faster (pitch preserved).
 export const VOICE_RATE = 1.1
+// Live output level (0..1) for the Mockingbird orb. Read from an analyser on the ElevenLabs audio.
+let actx: AudioContext | null = null
+let analyser: AnalyserNode | null = null
+let buf: Uint8Array<ArrayBuffer> | null = null
+function hookAnalyser(audio: HTMLAudioElement) {
+  try {
+    if (!actx) { actx = new AudioContext(); analyser = actx.createAnalyser(); analyser.fftSize = 512; analyser.smoothingTimeConstant = 0.6; analyser.connect(actx.destination); buf = new Uint8Array(analyser.fftSize) }
+    if (actx.state === 'suspended') void actx.resume()
+    actx.createMediaElementSource(audio).connect(analyser!)
+  } catch { /* level stays 0, orb falls back to a synthetic pulse */ }
+}
+export function getLevel(): number {
+  if (!analyser || !buf) return 0
+  analyser.getByteTimeDomainData(buf)
+  let sum = 0
+  for (let i = 0; i < buf.length; i++) { const v = (buf[i] - 128) / 128; sum += v * v }
+  return Math.min(1, Math.sqrt(sum / buf.length) * 3.2)
+}
 export const voiceStatus = { source: 'none' as 'none' | 'elevenlabs' | 'browser' }
 
 async function sha1(text: string) {
@@ -130,6 +148,7 @@ export async function speak(text: string, enabled: boolean): Promise<void> {
     return new Promise<void>((resolve) => {
       const audio = new Audio(url)
       audio.playbackRate = VOICE_RATE
+      hookAnalyser(audio)
       const done = () => { if (current?.audio === audio) current = null; resolve() }
       current = { audio, done }
       audio.onended = done

@@ -94,7 +94,8 @@ function rng(seed: number) {
   let s = seed
   return () => ((s = (s * 1664525 + 1013904223) % 4294967296) / 4294967296)
 }
-const WEIGHTS: Record<string, number> = { Davidson: 9, Shelby: 6, Rutherford: 4, Williamson: 3, Wilson: 3, Sumner: 3, Madison: 2, Montgomery: 2, Maury: 2, Robertson: 1, Dickson: 1, Cheatham: 1, Fayette: 1, Hardeman: 1, Dyer: 1 }
+const WEIGHTS: Record<string, number> = Object.fromEntries(DECLARED.map((c) => [c, 2])) // spread across the whole declaration
+WEIGHTS.Davidson = 7; WEIGHTS.Shelby = 5; WEIGHTS.Rutherford = 4; WEIGHTS.Williamson = 3; WEIGHTS.Wilson = 3; WEIGHTS.Sumner = 3
 export function seedCallers(): Caller[] {
   const r = rng(1776)
   const pool: string[] = []
@@ -103,16 +104,16 @@ export function seedCallers(): Caller[] {
   const emps: Employment[] = ['self-employed', 'hourly', 'employee', 'retired']
   const statuses: Status[] = ['new', 'new', 'prepared', 'referred', 'resolved']
   const list: Caller[] = []
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; i < 90; i++) {
     const county = pool[Math.floor(r() * pool.length)]
     const [la, ln] = centroids[county]
     const needs = needSets[Math.floor(r() * needSets.length)]
     list.push({
       id: 2001 + i,
       county,
-      lat: la + (r() - 0.5) * 0.14,
-      lng: ln + (r() - 0.5) * 0.18,
-      day: r() < 0.75 ? Math.floor(r() * 4) : 4 + Math.floor(r() * 84),
+      lat: la + (r() - 0.5) * 0.32,
+      lng: ln + (r() - 0.5) * 0.4,
+      day: r() < 0.5 ? Math.floor(r() * 10) : 10 + Math.floor(r() * 78),
       needs,
       household: 1 + Math.floor(r() * 5),
       employment: emps[Math.floor(r() * emps.length)],

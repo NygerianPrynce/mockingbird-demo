@@ -25,55 +25,47 @@ function makeAudio() {
     s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t + 0.06)
   }
   const cid = setInterval(() => { if (Math.random() < 0.7) crackle() }, 160)
-  const hum = ctx.createOscillator(); hum.frequency.value = 60
-  const hg = ctx.createGain(); hg.gain.value = 0.0; hum.connect(hg); hg.connect(master); hum.start()
   return {
-    ctx, master, hg,
+    ctx, master,
     fadeIn() { master.gain.linearRampToValueAtTime(0.7, ctx.currentTime + 3) },
-    pop() { // transformer blows: loud burst + low thump, then everything cuts
-      const t = ctx.currentTime
-      const s = noise(), g = ctx.createGain(); g.gain.setValueAtTime(1, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.5)
-      s.connect(g); g.connect(ctx.destination); s.start(t); s.stop(t + 0.5)
-      const o = ctx.createOscillator(); o.frequency.setValueAtTime(90, t); o.frequency.exponentialRampToValueAtTime(30, t + 0.6)
-      const og = ctx.createGain(); og.gain.setValueAtTime(1, t); og.gain.exponentialRampToValueAtTime(0.001, t + 0.7)
-      o.connect(og); og.connect(ctx.destination); o.start(t); o.stop(t + 0.8)
-      hg.gain.setValueAtTime(0.25, t); hg.gain.exponentialRampToValueAtTime(0.0001, t + 1.2)
-      master.gain.cancelScheduledValues(t); master.gain.setValueAtTime(master.gain.value, t); master.gain.linearRampToValueAtTime(0.0, t + 0.9)
-    },
-    stop() { clearInterval(cid); try { wind.stop(); lfo.stop(); hum.stop() } catch { /* ignore */ } if (ctx.state !== 'closed') ctx.close() },
+    stop() { clearInterval(cid); try { wind.stop(); lfo.stop() } catch { /* ignore */ } if (ctx.state !== 'closed') ctx.close() },
   }
 }
 
 const NEXT = '#/live'
 
-// Presenter-driven ambience. The presenter narrates over it. B = transformer blows and the power cuts. N = next screen.
-// Optional real footage: drop a clip at app/public/storm.mp4 and it plays behind the snow.
+// Presenter narrates over drone footage of the storm. Put the clip at app/public/storm.mp4.
+// With no clip, falls back to falling snow and synthesized wind. The situation plays out for real: no staged blackout.
 export default function Storm() {
   const cv = useRef<HTMLCanvasElement>(null)
   const au = useRef<ReturnType<typeof makeAudio> | null>(null)
-  const [out, setOut] = useState(false)
-  const [needsClick, setNeedsClick] = useState(false)
-  const [video, setVideo] = useState(false)
-  const outRef = useRef(false)
-  outRef.current = out
-
-  const startSound = () => { au.current?.stop(); au.current = makeAudio(); au.current.ctx.resume(); au.current.fadeIn(); setNeedsClick(false) }
-  const blackout = () => { if (outRef.current) return; setOut(true); au.current?.pop() }
+  const vid = useRef<HTMLVideoElement>(null)
+  const [video, setVideo] = useState<boolean | null>(null)
 
   useEffect(() => {
-    startSound()
-    const id = setTimeout(() => { if (au.current?.ctx.state !== 'running') setNeedsClick(true) }, 400)
-    fetch('/storm.mp4', { method: 'HEAD' }).then((r) => setVideo(r.ok && (r.headers.get('content-type') ?? '').startsWith('video'))).catch(() => {})
-    const k = (e: KeyboardEvent) => { if (e.key === 'b' || e.key === 'B') blackout() }
-    addEventListener('keydown', k)
-    return () => { clearTimeout(id); removeEventListener('keydown', k); au.current?.stop() }
+    let dead = false
+    fetch('/storm.mp4', { method: 'HEAD' }).then((r) => {
+      const ok = r.ok && (r.headers.get('content-type') ?? '').startsWith('video')
+      if (dead) return
+      setVideo(ok)
+      if (!ok) { au.current = makeAudio(); au.current.ctx.resume(); au.current.fadeIn() }
+    }).catch(() => setVideo(false))
+    return () => { dead = true; au.current?.stop() }
   }, [])
+
+  // play the clip with its own sound; if the browser blocks sound, play it muted rather than not at all
+  useEffect(() => {
+    const v = vid.current
+    if (!v || !video) return
+    v.muted = false
+    v.play().catch(() => { v.muted = true; v.play().catch(() => {}) })
+  }, [video])
 
   // The phone can dial while this screen is up: jump to the call screen and let it pick up.
   useRelay((m) => { if (m.from === 'phone' && m.type === 'dial') { setDemo({ pendingDial: true }); location.hash = NEXT } })
 
-  // snowfall
   useEffect(() => {
+    if (video !== false) return
     const c = cv.current!, g = c.getContext('2d')!
     let w = 0, h = 0, raf = 0
     const flakes = Array.from({ length: 220 }, () => ({ x: Math.random(), y: Math.random(), r: 0.8 + Math.random() * 2.8, v: 0.4 + Math.random() * 1.2, d: Math.random() * Math.PI * 2 }))
@@ -91,22 +83,15 @@ export default function Storm() {
     }
     tick()
     return () => { cancelAnimationFrame(raf); removeEventListener('resize', size) }
-  }, [])
+  }, [video])
 
   return (
-    <div className={'storm' + (out ? ' dark' : '')}>
-      {video && <video className="storm-video" src="/storm.mp4" autoPlay muted loop playsInline />}
-      <div className="storm-frost" aria-hidden="true" />
-      <canvas ref={cv} className="storm-snow" aria-hidden="true" />
-      <div className="storm-cap">
+    <div className="storm">
+      {video && <video ref={vid} className="storm-video" src="/storm.mp4" autoPlay loop playsInline />}
+      {video === false && <><div className="storm-frost" aria-hidden="true" /><canvas ref={cv} className="storm-snow" aria-hidden="true" /></>}
+      <div className={'storm-cap' + (video ? ' corner' : '')}>
         <p className="storm-date">January 24, 2026</p>
         <p className="storm-place">Nashville, Tennessee</p>
-        {out && <p className="storm-out slide">Power out.</p>}
-      </div>
-      {needsClick && <button className="btn light" style={{ position: 'absolute' }} onClick={startSound}>Start sound</button>}
-      <div className="storm-hint controls">
-        <button className="btn sm light" onClick={blackout} disabled={out}>Transformer blows (B)</button>
-        <a className="btn sm light" href={NEXT}>Next: the call (N)</a>
       </div>
     </div>
   )

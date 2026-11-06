@@ -3,6 +3,7 @@ import { createListener, speechSupported } from '../lib/speech'
 import { relaySend, useRelay } from '../lib/relay'
 import icon from '../assets/mockingbird-icon.svg'
 import { Keypad } from '../components/Keypad'
+import { Orb } from '../components/Orb'
 
 // The "handset". Open this page on a phone. It looks like a call, but speech goes to the presenter screen over the web.
 type St = 'idle' | 'ringing' | 'connected' | 'ended'
@@ -15,6 +16,7 @@ export default function Phone() {
   const [err, setErr] = useState('')
   const [kp, setKp] = useState<{ length: number; label: string } | null>(null)
   const phase = useRef('idle')
+  const [ph, setPh] = useState('idle')
   const stRef = useRef<St>('idle')
   stRef.current = st
   const kpRef = useRef<typeof kp>(null)
@@ -33,7 +35,7 @@ export default function Phone() {
     if (m.from !== 'screen') return
     if (m.type === 'connected') { setSt('connected'); setSecs(0) }
     if (m.type === 'phase') {
-      phase.current = m.phase ?? 'idle'
+      phase.current = m.phase ?? 'idle'; setPh(m.phase ?? 'idle')
       setKp(m.kp ?? null); kpRef.current = m.kp ?? null
       if (m.phase === 'done') setTimeout(() => { setSt('ended'); listener.current?.stop() }, 2500)
       sync()
@@ -47,7 +49,7 @@ export default function Phone() {
     try { const s = await navigator.mediaDevices.getUserMedia({ audio: true }); s.getTracks().forEach((t) => t.stop()) } catch { setErr('Allow the microphone to talk to Mockingbird.') }
     setSt('ringing')
     relaySend({ from: 'phone', type: 'dial' })
-    setTimeout(() => { if (stRef.current === 'ringing') setErr('Nobody picked up. Is the screen line open?') }, 12000)
+    setTimeout(() => { if (stRef.current === 'ringing') setErr('Nobody picked up. Is the demo screen open?') }, 12000)
   }
   const hang = () => { listener.current?.stop(); relaySend({ from: 'phone', type: 'hangup' }); setSt('ended') }
   const mmss = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`
@@ -69,7 +71,7 @@ export default function Phone() {
       )}
       {(st === 'ringing' || st === 'connected') && (
         <div className="hs-body">
-          <img src={icon} width={96} height={96} alt="" className="hs-logo" />
+          {st === 'connected' ? <div className="hs-orb"><Orb phase={ph} size={210} synthetic /></div> : <img src={icon} width={96} height={96} alt="" className="hs-logo" />}
           <h1>Mockingbird Hotline</h1>
           <p className="hs-num">{st === 'ringing' ? 'Calling...' : mmss}</p>
           {st === 'connected' && <p className="hs-heard" aria-live="polite">{phase.current === 'listening' ? (heard || 'Go ahead, I’m listening') : ' '}</p>}

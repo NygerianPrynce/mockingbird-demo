@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react'
 import { Logo } from './components/Logo'
-import { getDemo, setDemo, useDemo } from './store'
+import { setDemo, useDemo } from './store'
 import Profile from './pages/Profile'
 import Live from './pages/Live'
 import Storm from './pages/Storm'
 import Phone from './pages/Phone'
+import Setup from './pages/Setup'
+import Orbs from './pages/Orbs'
 import Plan from './pages/Plan'
 import Responder from './pages/Responder'
 
 const ROUTES = [
-  { path: '/profile', label: '1 Profile', el: <Profile /> },
-  { path: '/storm', label: '2 Storm', el: <Storm /> },
-  { path: '/live', label: '3 Call', el: <Live /> },
-  { path: '/plan', label: '4 Plan', el: <Plan /> },
-  { path: '/responder', label: '5 Map', el: <Responder /> },
+  { path: '/profile', label: 'Profile', el: <Profile /> },
+  { path: '/storm', label: 'Storm', el: <Storm /> },
+  { path: '/live', label: 'Call', el: <Live /> },
+  { path: '/plan', label: 'Plan', el: <Plan /> },
+  { path: '/responder', label: 'Map', el: <Responder /> },
 ]
 
 function Stopwatch() {
@@ -31,12 +33,19 @@ export default function App() {
     addEventListener('hashchange', f)
     return () => removeEventListener('hashchange', f)
   }, [])
+  useEffect(() => { document.body.classList.add('rec') }, [])
+  const [needsClick, setNeedsClick] = useState(!navigator.userActivation?.hasBeenActive)
+  useEffect(() => {
+    if (!needsClick) return
+    const f = () => setNeedsClick(false)
+    addEventListener('pointerdown', f); addEventListener('keydown', f)
+    return () => { removeEventListener('pointerdown', f); removeEventListener('keydown', f) }
+  }, [needsClick])
   useEffect(() => {
     const k = (ev: KeyboardEvent) => {
       const t = ev.target as HTMLElement
       if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA') return
       if (ev.key === 'h' || ev.key === 'H') document.body.classList.toggle('rec')
-      if (ev.key === 'p' || ev.key === 'P') setDemo({ showCue: !getDemo().showCue })
       const i = ROUTES.findIndex((r) => r.path === (location.hash.slice(1) || '/profile'))
       if ((ev.key === 'n' || ev.key === 'N' || ev.key === 'ArrowRight') && i >= 0 && i < ROUTES.length - 1) location.hash = ROUTES[i + 1].path
       if ((ev.key === 'ArrowLeft') && i > 0) location.hash = ROUTES[i - 1].path
@@ -46,6 +55,8 @@ export default function App() {
     return () => removeEventListener('keydown', k)
   }, [])
   if (path === '/phone') return <Phone />
+  if (path === '/setup') return <Setup />
+  if (path === '/orbs') return <Orbs />
   const route = ROUTES.find((r) => r.path === path) ?? ROUTES[0]
   return (
     <>
@@ -60,6 +71,7 @@ export default function App() {
         <Stopwatch />
         <span className="badge-demo">Demo, fictional data</span>
       </header>
+      {needsClick && <div className="arm">Click once to enable sound</div>}
       <main key={route.path}>{route.el}</main>
     </>
   )

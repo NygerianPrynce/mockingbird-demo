@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { keyTone } from '../lib/dtmf'
 
 const SUB: Record<string, string> = { '2': 'ABC', '3': 'DEF', '4': 'GHI', '5': 'JKL', '6': 'MNO', '7': 'PQRS', '8': 'TUV', '9': 'WXYZ' }
-export function Dots({ n, of }: { n: number; of: number }) {
-  return <div className="kp-dots" aria-label={`${n} of ${of} digits entered`}>{Array.from({ length: of }, (_, i) => <span key={i} className={i < n ? 'on' : ''} />)}</div>
+export function Dots({ n, of, dark }: { n: number; of: number; dark?: boolean }) {
+  return <div className={'kp-dots' + (dark ? ' dark' : '')} aria-label={`${n} of ${of} digits entered`}>{Array.from({ length: of }, (_, i) => <span key={i} className={i < n ? 'on' : ''} />)}</div>
 }
 // Digits are masked. A tone plays on every key, like a phone. * deletes, # submits early (only when complete).
 export function Keypad({ length, label, onDone, onCount, dark }: { length: number; label: string; onDone: (d: string) => void; onCount?: (n: number) => void; dark?: boolean }) {

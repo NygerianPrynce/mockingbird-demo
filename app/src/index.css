@@ -221,3 +221,104 @@ p { margin: 0 0 1em; }
 .keypad.dark .kp-grid button { background: rgba(255,255,255,.14); border-color: transparent; }
 .keypad.dark .kp-grid button:active { background: rgba(255,255,255,.3); }
 .keypad.dark .kp-s { color: rgba(255,255,255,.7); }
+
+/* ---- phone-driven call screens: orb + words, everything fits one screen ---- */
+.rec .topbar { display: none; }
+.rec .resp, .rec .storm { height: 100vh; }
+.rec .page { padding-top: 20px; }
+.callpanel { background: var(--tn-navy); color: #fff; border-radius: var(--radius); padding: 18px 20px 16px; display: flex; flex-direction: column; align-items: center; min-height: 0; }
+.orbwrap { line-height: 0; }
+.orb-status { margin: 0; font-size: .8rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #B9CBE3; }
+.orb-num { margin: 4px 0 0; font-size: 1.5rem; font-family: var(--serif); letter-spacing: .02em; }
+.transcript.dark { width: 100%; flex: 1; min-height: 0; height: auto; max-height: 260px; margin-top: 12px; text-align: left; font-size: 1rem; scrollbar-width: thin; }
+.tline { display: grid; grid-template-columns: 96px 1fr; gap: 8px; padding: 5px 0; line-height: 1.35; }
+.tline .who { font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding-top: 4px; color: #B9CBE3; }
+.tline.ai { color: #fff; font-size: 1.05rem; }
+.tline.you { color: #C9D6EA; }
+.tline.interim { font-style: italic; opacity: .8; }
+.kp-wait { margin-top: 8px; text-align: center; }
+.kp-wait p { margin: 0 0 4px; font-size: .9rem; font-weight: 700; }
+.kp-dots.dark span { border-color: #fff; }
+.kp-dots.dark span.on { background: #fff; }
+.page > .wide > h1 { font-size: 1.6rem; margin-bottom: 14px; }
+.callgrid { grid-template-columns: minmax(340px, 4fr) 8fr; gap: 24px; align-items: stretch; }
+.callgrid .leftcol { display: flex; flex-direction: column; gap: 12px; }
+.live > .callpanel { height: calc(100vh - 130px); }
+.callgrid .leftcol .callpanel { flex: 1; }
+.idcard { border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: .9rem; }
+.appl .body { padding: 12px 18px; }
+.appl { overflow: auto; max-height: calc(100vh - 56px); }
+.dua-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
+.dua-grid .sec-title { margin: 12px 0 2px; }
+.dua-grid .field { grid-template-columns: 130px 1fr auto; font-size: .85rem; padding: 5px 0 5px 8px; gap: 8px; }
+.trapbox { margin: 0 0 6px; font-size: .9rem; padding: 8px 14px; }
+.docs { margin-top: 6px; }
+.docrow { display: flex; gap: 12px; flex-wrap: wrap; font-size: .85rem; }
+.docrow span { border: 1px solid var(--border); background: var(--surface); border-radius: 3px; padding: 5px 10px; }
+.docrow i { color: var(--ink-secondary); font-style: normal; font-size: .75rem; }
+.sms { font-size: .85rem; margin-top: 10px; padding: 8px 12px; }
+/* profile: tighten so the whole profile fits */
+.live .summary .row { padding: 6px 0; font-size: .9rem; grid-template-columns: 1fr 2.4fr auto; }
+.live .panel .body { padding: 10px 18px; }
+
+/* plan: one screen, government-site look */
+.planpage { padding-top: 18px; }
+.plan-head { display: grid; grid-template-columns: 1fr 1.6fr; gap: 28px; align-items: center; margin-bottom: 14px; }
+.plan-head h1 { margin: 0; font-size: 1.9rem; }
+.plan-head .banner { margin: 0; }
+.plan-head .banner div { padding: 10px 14px; font-size: .92rem; }
+.plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.plan-col { border-top: 4px solid var(--tn-navy); background: var(--surface); padding: 6px 16px 10px; }
+.plan-col h2 { margin: 10px 0 6px; font-size: 1.25rem; display: flex; align-items: baseline; gap: 10px; }
+.plan-col h2 small { font-family: var(--font); font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-secondary); }
+.plan-col .task { display: block; padding: 10px 0; }
+.plan-col .task .t { display: flex; justify-content: space-between; gap: 8px; font-size: .95rem; line-height: 1.25; }
+.plan-col .task .meta { font-size: .82rem; margin-top: 4px; }
+.plan-col .due { color: var(--tn-red); font-weight: 700; }
+
+/* map: map only. summary, signal and detail float on top */
+.resp { height: 100vh; }
+.mapstats { position: absolute; top: 14px; left: 14px; z-index: 1000; display: flex; background: #fff; border: 1px solid var(--border); border-radius: 4px; }
+.mapstats div { padding: 8px 18px; border-right: 1px solid var(--border); }
+.mapstats div:last-child { border-right: 0; }
+.mapstats b { display: block; font-size: 1.3rem; color: var(--tn-navy); line-height: 1.2; }
+.mapstats span { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-secondary); }
+.signalcard { position: absolute; top: 82px; left: 14px; z-index: 1000; width: 330px; background: #FFF8F8; border: 1px solid var(--tn-red); border-radius: 4px; padding: 12px 16px; font-size: .9rem; }
+.signalcard p { margin: 4px 0 10px; }
+.signalcard + .signalcard { top: 82px; background: #fff; border-color: var(--border); }
+.mapwrap .side { position: absolute; right: 14px; top: 14px; bottom: 14px; z-index: 1000; border: 1px solid var(--border); border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,.12); }
+.mapwrap #map { flex: 1; }
+
+/* storm + sound + phone */
+.storm { height: 100vh; margin-right: 0; }
+.storm-video { opacity: 1; }
+.storm-cap.corner { position: absolute; left: 36px; bottom: 30px; text-align: left; text-shadow: 0 2px 14px rgba(0,0,0,.65); }
+.storm-cap.corner .storm-date { font-size: 2rem; }
+.arm { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 4000; background: rgba(0,0,0,.72); color: #fff; font-size: .75rem; padding: 4px 12px; border-radius: 999px; }
+.rec .arm { display: block; }
+.live .summary .row { grid-template-columns: 110px 1fr; padding: 5px 0; }
+.live .summary { margin-bottom: 8px; }
+.live .inset { margin: 10px 0 0; padding: 8px 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { font-size: .78rem; border: 1px solid var(--border); background: var(--surface); border-radius: 3px; padding: 3px 8px; }
+.plan-col .task .t .tag { align-self: flex-start; flex: none; height: fit-content; }
+.callgrid { grid-template-columns: minmax(300px, 4fr) minmax(0, 8fr); }
+.appl { min-width: 0; }
+.appl > header { flex-wrap: wrap; row-gap: 4px; }
+.dua-grid .field { grid-template-columns: 108px minmax(0, 1fr) auto; }
+.dua-grid .tag.profile { font-size: .6rem; padding: 1px 5px; }
+.dua-grid .k { font-size: .8rem; }
+.callgrid .leftcol .transcript.dark { max-height: 190px; font-size: .92rem; }
+.tline { grid-template-columns: 78px 1fr; }
+@media (max-width: 1100px) { .dua-grid { grid-template-columns: 1fr; } }
+
+/* light "glass" call panel, matches the orb */
+.callpanel { background: #E6E9ED; color: var(--tn-navy); }
+.orb-status { color: var(--ink-secondary); }
+.tline .who { color: var(--ink-secondary); }
+.tline.ai { color: var(--tn-navy); }
+.tline.you { color: var(--ink); }
+.tline { grid-template-columns: 104px 1fr; }
+.kp-dots.dark span { border-color: var(--tn-navy); }
+.kp-dots.dark span.on { background: var(--tn-navy); }
+.hs-orb { background: #E6E9ED; border-radius: 50%; margin-bottom: 8px; line-height: 0; }

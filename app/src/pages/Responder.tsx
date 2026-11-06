@@ -1,233 +1,151 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import L from 'leaflet'
 import counties from '../data/tn-counties.json'
-import { JAMES_CALL, NEEDS, STATUS_LABEL, DECLARED, DUA_DEADLINE, FEMA_DEADLINE, centroids, dayToDate, eligibility, fmt, fmtShort, seedCallers } from '../data/tn'
-import type { Caller, Need, Status } from '../data/tn'
-import { useDemo } from '../store'
+import { JAMES_CALL, NEEDS, STATUS_LABEL, DECLARED, DUA_DEADLINE, FEMA_DEADLINE, dayToDate, eligibility, fmt, seedCallers } from '../data/tn'
+import type { Caller, Need } from '../data/tn'
 
 const RAMP = ['#E8EEF7', '#B9CBE3', '#7C9CC7', '#3A64A0', '#002D65']
-const STATUS_RING: Record<Status, string> = { new: '#002D65', prepared: '#1E7B3A', referred: '#B25E00', resolved: '#9AA3AF' }
-const SIM_OUTAGES: [string, number][] = [['Davidson', 14000], ['Rutherford', 9000], ['Shelby', 11000], ['Sumner', 8000]]
-const SIM_CENTERS: [string, number, number][] = [['Davidson', 36.17, -86.78], ['Shelby', 35.15, -90.05], ['Rutherford', 35.85, -86.39], ['Madison', 35.61, -88.81]]
 const SEED = seedCallers()
-
-type Filters = { county: string; need: string; program: string; status: string; noDua: boolean }
-const NO_F: Filters = { county: '', need: '', program: '', status: '', noDua: false }
+const BOUNDS: L.LatLngBoundsLiteral = [[34.9, -90.4], [36.7, -81.7]]
 
 export default function Responder() {
-  const demo = useDemo()
   const mapEl = useRef<HTMLDivElement>(null)
   const map = useRef<L.Map | null>(null)
   const countyLayer = useRef<L.GeoJSON | null>(null)
   const pinLayer = useRef<L.LayerGroup | null>(null)
-  const extraLayer = useRef<L.LayerGroup | null>(null)
-  const tiles = useRef<L.LayerGroup | null>(null)
 
-  const [james, setJames] = useState(false)
   const [noticeSent, setNoticeSent] = useState(false)
-  const [day, setDay] = useState(4)
-  const [f, setF] = useState<Filters>(NO_F)
-  const [view, setView] = useState<'responder' | 'public'>('responder')
-  const [layers, setLayers] = useState({ pins: true, heat: false, outage: false, centers: false, streets: true })
+  const [t, setT] = useState(1)
+  const [playing, setPlaying] = useState(false)
   const [selCaller, setSelCaller] = useState<number | null>(null)
   const [selCounty, setSelCounty] = useState<string | null>(null)
-  const [fresh, setFresh] = useState(false)
+  const [latched, setLatched] = useState<{ county: string; n: number } | null>(null)
+  const day = Math.floor(t)
 
-  const all = useMemo(() => (james ? [...SEED, JAMES_CALL] : SEED), [james])
-  const visible = useMemo(() => all.filter((c) =>
-    c.day <= day &&
-    (!f.county || c.county === f.county) &&
-    (!f.need || c.needs.includes(f.need as Need)) &&
-    (!f.status || c.status === f.status) &&
-    (!f.program || eligibility(c).some((p) => p.key === f.program)) &&
-    (!f.noDua || (c.needs.includes('income') && !c.duaFiled))
-  ), [all, day, f])
+  const all = useMemo(() => [...SEED, JAMES_CALL], [])
+  const visible = useMemo(() => all.filter((c) => c.day <= day), [all, day])
 
-  // AI signal: many callers reporting the same need in one county within 3 days
+  // AI signal: many callers reporting the same need in one county within 3 days. Stays up once raised, until the notice goes out.
   const signal = useMemo(() => {
     const m: Record<string, number> = {}
     all.filter((c) => c.day <= day && c.day >= day - 3 && c.needs.includes('food')).forEach((c) => { m[c.county] = (m[c.county] || 0) + 1 })
     const top = Object.entries(m).sort((a, b) => b[1] - a[1])[0]
     return top && top[1] >= 5 ? { county: top[0], n: top[1] } : null
   }, [all, day])
+  useEffect(() => { if (signal && !latched && !noticeSent) setLatched(signal) }, [signal, latched, noticeSent])
+  const sig = noticeSent ? null : latched
 
   const countByCounty = useMemo(() => {
     const m: Record<string, number> = {}
     visible.forEach((c) => { m[c.county] = (m[c.county] || 0) + 1 })
     return m
   }, [visible])
-  const showHeat = layers.heat || view === 'public'
-  const showPins = layers.pins && view === 'responder'
-  const date = dayToDate(day)
 
-  // map init (no tile layer: fully offline, Tennessee is the subject)
+  // autoplay the storm from day 1 to day 88; slow at the start where the early calls come in
+  useEffect(() => { const id = setTimeout(() => setPlaying(true), 1500); return () => clearTimeout(id) }, [])
   useEffect(() => {
-    const m = L.map(mapEl.current!, { zoomSnap: 0.25, zoomControl: false, attributionControl: false, minZoom: 6, maxZoom: 11 })
+    if (!playing) return
+    const id = setInterval(() => setT((x) => { const n = x + (x < 10 ? 0.15 : 0.4); if (n >= 88) { setPlaying(false); return 88 } return n }), 100)
+    return () => clearInterval(id)
+  }, [playing])
+
+  useEffect(() => {
+    const m = L.map(mapEl.current!, { zoomSnap: 0, zoomDelta: 0.75, wheelPxPerZoomLevel: 45, zoomControl: false, attributionControl: false, minZoom: 6, maxZoom: 15 })
     L.control.zoom({ position: 'bottomright' }).addTo(m)
-    L.control.attribution({ position: 'bottomright', prefix: false }).addTo(m).addAttribution('Boundaries: US Census Bureau')
+    L.control.attribution({ position: 'bottomleft', prefix: false }).addTo(m).addAttribution('Boundaries: US Census Bureau. Tiles &copy; Esri')
     m.on('zoomend', () => m.getContainer().classList.toggle('zoomed', m.getZoom() >= 9))
-    // Felt-like light gray basemap: Esri Light Gray Canvas (keyless, needs Esri attribution). If offline, tiles just fail and the county map still works.
-    tiles.current = L.layerGroup([L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 13, attribution: 'Tiles &copy; Esri' }), L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', { maxZoom: 13 })]).addTo(m)
-    m.createPane('outage').style.zIndex = '410'
+    // Felt-like light gray streets (Esri Light Gray Canvas, keyless). If offline the county map still works.
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 13, maxZoom: 15 }).addTo(m)
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 13, maxZoom: 15 }).addTo(m)
     m.createPane('pins').style.zIndex = '450'
-    m.createPane('centers').style.zIndex = '460'
-    m.fitBounds([[34.9, -90.4], [36.7, -81.7]], { padding: [10, 10] })
+    m.fitBounds(BOUNDS, { padding: [10, 10] })
     countyLayer.current = L.geoJSON(counties as never, {
       style: { weight: 1, color: '#9AA6B5', fillColor: '#002D65', fillOpacity: 0 },
       onEachFeature: (ft, layer) => {
         const n = (ft.properties as { name: string }).name
-        layer.bindTooltip(n + (DECLARED.includes(n) ? '' : ' (not in declaration)'), { sticky: true, className: 'county-label', direction: 'top' })
+        layer.bindTooltip(n, { sticky: true, className: 'county-label', direction: 'top' })
         layer.on('click', () => { setSelCounty(n); setSelCaller(null) })
       },
     }).addTo(m)
     pinLayer.current = L.layerGroup().addTo(m)
-    extraLayer.current = L.layerGroup().addTo(m)
     map.current = m
-    const fit = () => { m.invalidateSize(); m.fitBounds([[34.9, -90.4], [36.7, -81.7]], { padding: [10, 10], animate: false }) }
-    const t = setTimeout(fit, 80)
+    const fit = () => { m.invalidateSize(); m.fitBounds(BOUNDS, { padding: [10, 10], animate: false }) }
+    const tm = setTimeout(fit, 80)
     const ro = new ResizeObserver(() => m.invalidateSize())
     ro.observe(mapEl.current!)
-    return () => { clearTimeout(t); ro.disconnect(); m.remove(); map.current = null }
+    return () => { clearTimeout(tm); ro.disconnect(); m.remove(); map.current = null }
   }, [])
 
-  // county styling: choropleth + selection + declared tint
+  // county heat map
   useEffect(() => {
     const max = Math.max(1, ...Object.values(countByCounty))
     countyLayer.current?.eachLayer((l) => {
       const p = l as L.Path & { feature: { properties: { name: string } } }
       const n = p.feature.properties.name
-      const sel = n === selCounty
-      const sig = n === signal?.county
-      const cnt = countByCounty[n] || 0
-      const fill = showHeat && cnt ? RAMP[Math.min(4, Math.ceil((cnt / max) * 5) - 1)] : '#002D65'
-      const op = showHeat ? (cnt ? 0.72 : 0) : DECLARED.includes(n) ? 0.05 : 0
-      p.setStyle({ fillColor: fill, fillOpacity: op, color: sel ? '#002D65' : sig ? '#CC0000' : '#8C98A8', weight: sel || sig ? 2.5 : 1, dashArray: sig && !sel ? '6 4' : undefined })
+      const sel = n === selCounty, hot = n === sig?.county, cnt = countByCounty[n] || 0
+      p.setStyle({ fillColor: cnt ? RAMP[Math.min(4, Math.ceil((cnt / max) * 5) - 1)] : '#002D65', fillOpacity: cnt ? 0.62 : 0, color: sel ? '#002D65' : hot ? '#CC0000' : '#8C98A8', weight: sel || hot ? 2.5 : 1, dashArray: hot && !sel ? '6 4' : undefined })
       if (sel) p.bringToFront()
     })
-  }, [countByCounty, showHeat, selCounty, signal])
+  }, [countByCounty, selCounty, sig])
 
-  // pins
   useEffect(() => {
     const g = pinLayer.current
     g?.clearLayers()
-    if (!g || !showPins) return
+    if (!g) return
     visible.forEach((c) => {
-      const isNew = c.id === JAMES_CALL.id
-      L.circleMarker([c.lat, c.lng], { pane: 'pins', radius: 12, fill: false, color: STATUS_RING[c.status], weight: 1.5, interactive: false, opacity: c.status === 'resolved' ? 0.6 : 1 }).addTo(g)
-      if (isNew && fresh) L.circleMarker([c.lat, c.lng], { pane: 'pins', radius: 12, fill: false, color: '#002D65', weight: 2, interactive: false, className: 'pulse' }).addTo(g)
-      L.circleMarker([c.lat, c.lng], { pane: 'pins', radius: 7, fillColor: NEEDS[c.needs[0]].color, fillOpacity: c.status === 'resolved' ? 0.55 : 1, color: '#fff', weight: 2 })
+      if (c.id === JAMES_CALL.id) L.circleMarker([c.lat, c.lng], { pane: 'pins', radius: 13, fill: false, color: '#002D65', weight: 2, interactive: false, className: 'pulse' }).addTo(g)
+      L.circleMarker([c.lat, c.lng], { pane: 'pins', radius: 6, fillColor: NEEDS[c.needs[0]].color, fillOpacity: 1, color: '#fff', weight: 2 })
         .on('click', () => { setSelCaller(c.id); setSelCounty(c.county) }).addTo(g)
     })
-  }, [visible, showPins, fresh])
+  }, [visible])
 
-  useEffect(() => {
-    const m = map.current, t = tiles.current
-    if (!m || !t) return
-    if (layers.streets) t.addTo(m); else m.removeLayer(t)
-  }, [layers.streets])
-
-  // simulated layers
-  useEffect(() => {
-    const g = extraLayer.current
-    g?.clearLayers()
-    if (!g) return
-    if (layers.outage) SIM_OUTAGES.forEach(([n, r]) => L.circle(centroids[n], { pane: 'outage', radius: r * (day < 15 ? 3 : 0.5), color: '#B25E00', weight: 1, dashArray: '4 4', fillColor: '#B25E00', fillOpacity: 0.12, interactive: false }).addTo(g))
-    if (layers.centers) SIM_CENTERS.forEach(([n, la, ln]) => L.marker([la, ln], { pane: 'centers', icon: L.divIcon({ className: '', html: '<div style="width:12px;height:12px;background:#fff;border:3px solid #1E7B3A"></div>', iconSize: [12, 12] }) }).bindTooltip(`Recovery center, ${n} (simulated)`).addTo(g))
-  }, [layers.outage, layers.centers, day])
-
-  const dropJames = () => {
-    setJames(true); setFresh(true); setSelCaller(null)
-    map.current?.flyTo([JAMES_CALL.lat, JAMES_CALL.lng], 8.5, { duration: 1.2 })
-    setTimeout(() => setFresh(false), 4500)
-  }
-
-  // stats
-  const prog = (k: string) => visible.filter((c) => eligibility(c).some((p) => p.key === k)).length
-  const needTally: Record<string, number> = {}
-  visible.forEach((c) => c.needs.forEach((n) => { needTally[n] = (needTally[n] || 0) + 1 }))
-  const top = Object.entries(needTally).sort((a, b) => b[1] - a[1])[0]
+  const top = (() => {
+    const tally: Record<string, number> = {}
+    visible.forEach((c) => c.needs.forEach((n) => { tally[n] = (tally[n] || 0) + 1 }))
+    return Object.entries(tally).sort((a, b) => b[1] - a[1])[0]
+  })()
   const caller = all.find((c) => c.id === selCaller)
-  const feed = [...visible].sort((a, b) => b.day - a.day || b.id - a.id).slice(0, 14)
+  const date = dayToDate(day)
 
   return (
     <div className="resp">
-      <div className="stats">
-        <div className="stat"><b>{visible.length}</b><span>Calls shown</span></div>
-        <div className="stat"><b>{Object.keys(countByCounty).length}</b><span>Counties affected</span></div>
-        <div className="stat"><b style={{ fontSize: '1.1rem', lineHeight: '1.7rem' }}>{top ? NEEDS[top[0] as Need].label : 'None'}</b><span>Top need</span></div>
-        <div className="stat"><b>{prog('DUA')}</b><span>Likely DUA</span></div>
-        <div className="stat"><b>{prog('FEMA')}</b><span>Likely FEMA IA</span></div>
-        <div className="stat"><b>{prog('SBA')}</b><span>Possibly SBA</span></div>
-        <div className="stat"><b>{visible.filter((c) => c.status === 'prepared').length}</b><span>Forms prepared</span></div>
-        <div className="stat warn"><b>{signal ? 1 : 0}</b><span>Open signals</span></div>
-        <div style={{ marginLeft: 'auto', padding: '10px 22px', alignSelf: 'center' }}><span className="tag grey">Seeded data is simulated</span></div>
-      </div>
-      <div className="filters">
-        <label>County<select value={f.county} onChange={(e) => setF({ ...f, county: e.target.value })}><option value="">All</option>{DECLARED.map((c) => <option key={c}>{c}</option>)}</select></label>
-        <label>Need<select value={f.need} onChange={(e) => setF({ ...f, need: e.target.value })}><option value="">All</option>{Object.entries(NEEDS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}</select></label>
-        <label>Program<select value={f.program} onChange={(e) => setF({ ...f, program: e.target.value })}><option value="">All</option><option value="DUA">Tennessee DUA</option><option value="FEMA">FEMA IA</option><option value="SBA">SBA loan</option></select></label>
-        <label>Status<select value={f.status} onChange={(e) => setF({ ...f, status: e.target.value })}><option value="">All</option>{Object.entries(STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
-        <label style={{ flexDirection: 'row', alignItems: 'center', gap: 6, textTransform: 'none', letterSpacing: 0, fontSize: '.85rem' }}>
-          <input type="checkbox" checked={f.noDua} onChange={(e) => setF({ ...f, noDua: e.target.checked })} /> Income loss, no DUA filed yet</label>
-        <button className="btn sm secondary" onClick={() => setF(NO_F)}>Clear filters</button>
-        <span style={{ marginLeft: 'auto' }} />
-        <div className="seg" role="group" aria-label="View">
-          <button aria-pressed={view === 'public'} onClick={() => setView('public')}>Public aggregate</button>
-          <button aria-pressed={view === 'responder'} onClick={() => setView('responder')}>Responder view</button>
-        </div>
-        <button className="btn sm" onClick={dropJames} disabled={james}>{james ? 'James’s call received' : demo.jamesCalled ? 'Drop James’s call on the map' : 'Simulate incoming call'}</button>
-      </div>
       <div className="mapwrap">
         <div id="map" ref={mapEl} role="application" aria-label="Map of Tennessee showing calls by county" />
-        <div className="layerbox" role="group" aria-label="Layers">
-          <b style={{ fontSize: '.7rem', textTransform: 'uppercase', color: 'var(--ink-secondary)' }}>Layers</b>
-          <label><input type="checkbox" checked={layers.streets} onChange={(e) => setLayers({ ...layers, streets: e.target.checked })} /> Streets (needs internet)</label>
-          <label><input type="checkbox" checked={layers.pins} onChange={(e) => setLayers({ ...layers, pins: e.target.checked })} /> Pins</label>
-          <label><input type="checkbox" checked={showHeat} disabled={view === 'public'} onChange={(e) => setLayers({ ...layers, heat: e.target.checked })} /> County heat map</label>
-          <label><input type="checkbox" checked={layers.outage} onChange={(e) => setLayers({ ...layers, outage: e.target.checked })} /> Power outage (simulated)</label>
-          <label><input type="checkbox" checked={layers.centers} onChange={(e) => setLayers({ ...layers, centers: e.target.checked })} /> Recovery centers (simulated)</label>
+        <div className="mapstats" aria-label="Summary">
+          <div><b>{visible.length}</b><span>Calls</span></div>
+          <div><b>{Object.keys(countByCounty).length}</b><span>Counties</span></div>
+          <div><b>{top ? NEEDS[top[0] as Need].label : 'None'}</b><span>Top need</span></div>
         </div>
+        {sig && (
+          <div className="signalcard slide">
+            <span className="tag" style={{ color: 'var(--tn-red)', borderColor: 'var(--tn-red)', background: '#fff' }}>Signal</span>
+            <h3 style={{ marginTop: 8 }}>Food access, {sig.county} County</h3>
+            <p>{sig.n} callers in the last 3 days cannot get food. Recommend rerouting hot meals to this area.</p>
+            <button className="btn sm" onClick={() => { setNoticeSent(true); setSelCounty(sig.county) }}>Send area notice (demo)</button>
+          </div>
+        )}
+        {noticeSent && latched && (
+          <div className="signalcard slide"><b>Notice sent (demo)</b><p style={{ margin: '6px 0 0' }}>To {latched.county} County emergency management: {latched.n} callers report no food access. Recommend hot meal distribution.</p></div>
+        )}
+        {(caller || selCounty) && (
+          <aside className="side" aria-label="Details">
+            {caller ? <CallerPanel c={caller} onClose={() => setSelCaller(null)} /> : <CountyPanel name={selCounty!} calls={visible.filter((c) => c.county === selCounty)} onClose={() => setSelCounty(null)} />}
+          </aside>
+        )}
         <div className="legend">
-          {showPins && Object.entries(NEEDS).map(([k, v]) => <div key={k}><span className="sw" style={{ background: v.color }} />{v.label}</div>)}
-          {showPins && <div className="caption" style={{ marginTop: 4 }}>Ring: New, Prepared, Referred, Resolved</div>}
-          {showHeat && <><div style={{ marginTop: 6 }}>Calls per county</div><div className="ramp">{RAMP.map((c) => <i key={c} style={{ background: c }} />)}</div><div className="caption" style={{ display: 'flex', justifyContent: 'space-between' }}><span>Fewer</span><span>More</span></div></>}
+          {Object.entries(NEEDS).map(([k, v]) => <div key={k}><span className="sw" style={{ background: v.color }} />{v.label}</div>)}
         </div>
-        <aside className="side" aria-label="Details">
-          {caller ? <CallerPanel c={caller} view={view} onClose={() => setSelCaller(null)} />
-            : selCounty ? <CountyPanel name={selCounty} calls={visible.filter((c) => c.county === selCounty)} onClose={() => setSelCounty(null)} />
-            : (
-              <>
-                {signal && (
-                  <div className="pad slide" style={{ borderBottom: '1px solid var(--border)', background: '#FFF8F8' }}>
-                    <span className="tag" style={{ color: 'var(--tn-red)', borderColor: 'var(--tn-red)', background: '#fff' }}>Signal</span>
-                    <h3 style={{ marginTop: 8 }}>Food access, {signal.county} County</h3>
-                    <p style={{ fontSize: '.92rem' }}>{signal.n} callers in the last 3 days say they cannot get food. Recommend rerouting hot meals and food distribution to this area.</p>
-                    {!noticeSent
-                      ? <button className="btn sm" onClick={() => { setNoticeSent(true); setF({ ...NO_F, need: 'food' }); setLayers((l) => ({ ...l, heat: true })) }}>Send area notice (demo)</button>
-                      : <div className="inset" style={{ margin: 0, fontSize: '.88rem' }}><b>Notice drafted (demo)</b><br />To {signal.county} County emergency management: {signal.n} callers report no food access since Day {day - 3}. Recommend hot meal distribution. Simulated data.</div>}
-                  </div>
-                )}
-                <div className="pad"><h3>Live feed</h3><p className="hint">Click a pin or a county for details. Public view shows counts only.</p></div>
-                {feed.map((c) => (
-                  <div key={c.id} className={'feed-item' + (c.id === JAMES_CALL.id && fresh ? ' new' : '')} onClick={() => { setSelCaller(c.id); setSelCounty(c.county) }} style={{ cursor: 'pointer' }}>
-                    <b>{c.id === JAMES_CALL.id ? 'New call' : 'Call'}, {c.county} County</b><br />
-                    <span className="hint">{c.needs.map((n) => NEEDS[n].label.toLowerCase()).join(', ')} &bull; {fmtShort(dayToDate(c.day))}{c.simulated ? ' \u2022 simulated' : ''}</span>
-                  </div>
-                ))}
-              </>
-            )}
-        </aside>
       </div>
       <div className="slider">
+        <button className="btn sm secondary" onClick={() => { if (t >= 88) setT(1); setPlaying((p) => !p) }} aria-label={playing ? 'Pause' : 'Play'}>{playing ? 'Pause' : t >= 88 ? 'Replay' : 'Play'}</button>
         <b>Day {day}</b><span>{fmt(date)}</span>
-        <input type="range" min={1} max={88} value={day} onChange={(e) => setDay(+e.target.value)} aria-label="Days since storm" />
-        <button className="btn sm secondary" onClick={() => { setDay(1); let d = 1; const id = setInterval(() => { d += 2; if (d >= 88) { d = 88; clearInterval(id) } setDay(d) }, 70) }}>Replay storm to Day 88</button>
+        <input type="range" min={1} max={88} value={day} onChange={(e) => { setPlaying(false); setT(+e.target.value) }} aria-label="Days since storm" />
       </div>
     </div>
   )
 }
 
-function CallerPanel({ c, view, onClose }: { c: Caller; view: string; onClose: () => void }) {
+function CallerPanel({ c, onClose }: { c: Caller; onClose: () => void }) {
   const progs = eligibility(c)
   const isJames = c.id === JAMES_CALL.id
   return (
@@ -236,7 +154,7 @@ function CallerPanel({ c, view, onClose }: { c: Caller; view: string; onClose: (
       <h2 style={{ marginTop: 12 }}>Caller {c.id}</h2>
       <p className="hint">{c.county} County &bull; {fmt(dayToDate(c.day))} &bull; {STATUS_LABEL[c.status]}{c.simulated ? ' \u2022 simulated' : ''}</p>
       <p><b>Needs:</b> {c.needs.map((n) => NEEDS[n].label).join(', ')}<br /><b>Household:</b> {c.household}<br /><b>Work:</b> {c.employment}<br /><b>DUA filed:</b> {c.duaFiled ? 'Yes' : 'No'}</p>
-      {view === 'responder' && c.consent
+      {c.consent
         ? <p className="inset" style={{ margin: '0 0 16px' }}><b>Opted in to share details</b><br />{isJames ? 'James Carter (fictional), (615) 555-0142' : 'Contact details held in responder system'}</p>
         : <p className="hint">Name and phone are not shown. Caller did not opt in, or this is the public view.</p>}
       <h3>Programs likely eligible for</h3>
