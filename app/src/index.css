@@ -412,11 +412,6 @@ p { margin: 0 0 1em; }
 /* storm: key facts fade in over the footage */
 .storm::after { content: ''; position: absolute; inset: auto 0 0 0; height: 55%; background: linear-gradient(to top, rgba(0,12,30,.82), rgba(0,12,30,0)); pointer-events: none; }
 .storm-cap.corner { z-index: 3; top: 28px; bottom: auto; }
-.storm-facts { position: absolute; left: 36px; right: 36px; bottom: 26px; z-index: 3; }
-.storm-facts ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; max-width: 760px; }
-.storm-facts li { color: #fff; font-size: 1.15rem; font-weight: 600; padding-left: 22px; position: relative; opacity: 0; transform: translateY(10px); animation: factin .8s ease forwards; text-shadow: 0 1px 10px rgba(0,0,0,.6); }
-.storm-facts li::before { content: ''; position: absolute; left: 0; top: .5em; width: 8px; height: 8px; border-radius: 50%; background: var(--tn-red); }
-@keyframes factin { to { opacity: 1; transform: none; } }
 
 .btnrow.stack { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .btnrow.stack .btn { width: 100%; text-align: center; }
@@ -459,16 +454,42 @@ p { margin: 0 0 1em; }
 .callpanel { position: relative; padding: 0; overflow: hidden; background-color: rgba(0, 45, 101, 0); transition: background-color 1.1s ease .15s; }
 .callpanel:not(.idle) { background-color: var(--tn-navy); }
 .callpanel .scene { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: 18px 20px 16px; transition: opacity .7s ease, transform 1.2s var(--ease); }
-.callpanel .bird-scene { justify-content: center; opacity: 0; transform: scale(.82); pointer-events: none; }
-.callpanel.idle .bird-scene { opacity: 1; transform: none; transition: opacity .8s ease; }
+.callpanel .bird-scene { justify-content: center; opacity: 0; pointer-events: none; transition: opacity .45s ease; }
+.callpanel.idle .bird-scene { opacity: 1; transition: opacity .8s ease; }
 .callpanel .call-scene { opacity: 1; transition: opacity .9s ease .5s, transform 1.2s var(--ease) .4s; }
 .callpanel.idle .call-scene { opacity: 0; transform: scale(.94); pointer-events: none; transition: opacity .3s ease; }
 .callpanel .transcript.dark { flex: 1; }
 .perch { width: 100%; max-width: 560px; height: auto; }
 .perch .bird { animation: lift 9s var(--ease) infinite; transform-origin: 50% 80%; }
-.perch .wing.wb { animation: flapb 9s ease-in-out infinite; transform-origin: 0 0; }
-.perch .wing.wf { animation: flapf 9s ease-in-out infinite; transform-origin: 0 0; }
-@keyframes lift { 0%, 62% { transform: translateY(0); } 70% { transform: translateY(-26px) rotate(-2deg); } 78% { transform: translateY(-34px) rotate(1deg); } 90%, 100% { transform: translateY(0); } }
-@keyframes flapb { 0%, 62%, 92%, 100% { transform: rotate(0); } 65% { transform: rotate(18deg); } 68% { transform: rotate(-16deg); } 71% { transform: rotate(18deg); } 74% { transform: rotate(-16deg); } 77% { transform: rotate(14deg); } 80% { transform: rotate(-10deg); } 86% { transform: rotate(4deg); } }
-@keyframes flapf { 0%, 62%, 92%, 100% { transform: rotate(0); } 65% { transform: rotate(-12deg); } 68% { transform: rotate(10deg); } 71% { transform: rotate(-12deg); } 74% { transform: rotate(10deg); } 77% { transform: rotate(-9deg); } 80% { transform: rotate(6deg); } 86% { transform: rotate(-3deg); } }
+@keyframes lift { 0%, 58% { transform: translateY(0); } 66% { transform: translateY(-20px) rotate(-1deg); } 76% { transform: translateY(-30px) rotate(1deg); } 90%, 100% { transform: translateY(0); } }
 .slide { animation-duration: .9s; animation-timing-function: var(--ease); }
+
+/* the bird just fades out first, then the layout eases open */
+.morph { transition: grid-template-columns 1.5s var(--ease) .4s, column-gap 1.5s var(--ease) .4s; }
+.morph > .panel, .morph > .appl { transition: opacity .9s ease .95s, transform 1.2s var(--ease) .85s; }
+.callpanel { transition: background-color 1.1s ease .45s; }
+.callpanel .call-scene { transition: opacity .9s ease .95s; }
+
+/* storm: date fades in at center, slides up, then two key facts follow one by one */
+.storm::after { height: 100%; background: radial-gradient(ellipse at center, rgba(0,12,30,.62), rgba(0,12,30,.25) 70%); }
+.storm-center { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 8%; }
+.storm-date.big { font-size: 3.4rem; margin: 0; color: #fff; opacity: 0; text-shadow: 0 2px 18px rgba(0,0,0,.6); animation: dateIn 1.2s var(--ease) .6s forwards, dateUp 1.4s var(--ease) 3s forwards; }
+.storm-place.big { margin: 8px 0 26px; opacity: 0; animation: dateIn 1.2s var(--ease) .9s forwards, dateUp 1.4s var(--ease) 3s forwards; }
+@keyframes dateIn { from { opacity: 0; transform: translateY(70px); } to { opacity: 1; transform: translateY(70px); } }
+@keyframes dateUp { from { transform: translateY(70px); } to { transform: translateY(0); } }
+.storm-bullets { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; max-width: 780px; text-align: left; }
+.storm-bullets li { color: #fff; font-size: 1.5rem; font-weight: 600; padding-left: 28px; position: relative; opacity: 0; transform: translateY(14px); animation: bulletIn 1s var(--ease) forwards; text-shadow: 0 1px 12px rgba(0,0,0,.7); }
+.storm-bullets li::before { content: ''; position: absolute; left: 0; top: .55em; width: 10px; height: 10px; border-radius: 50%; background: var(--tn-red); }
+@keyframes bulletIn { to { opacity: 1; transform: none; } }
+
+/* fatter timeline cards */
+.timeline { margin: 0 6.5%; height: clamp(520px, calc(100vh - 190px), 680px); }
+.timeline .tcard { left: -46%; right: -46%; padding: 14px 18px 16px; font-size: .9rem; }
+.tcard .tt { font-size: 1.05rem; }
+.tcard .prog { color: var(--ink-secondary); margin-bottom: 6px; }
+.tcard .note { margin: 0 0 6px; color: var(--ink); line-height: 1.4; }
+.tcard .bring { margin: 0 0 10px; color: var(--ink-secondary); }
+.tcard .btn { text-decoration: none; }
+.timeline li.up .tcard { bottom: calc(50% + 24px); }
+.timeline li.down .tcard { top: calc(50% + 24px); }
+.timeline li.up::after, .timeline li.down::after { height: 24px; }

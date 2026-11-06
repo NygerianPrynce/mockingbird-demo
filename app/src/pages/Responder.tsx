@@ -20,6 +20,7 @@ export default function Responder() {
   const [playing, setPlaying] = useState(false)
   const [selCaller, setSelCaller] = useState<number | null>(null)
   const [selCounty, setSelCounty] = useState<string | null>(null)
+  const focusRef = useRef<(n: string, id?: number | null) => void>(() => {})
   const [sigOpen, setSigOpen] = useState(false)
   const [actions, setActions] = useState<Record<string, boolean>>({})
   const [latched, setLatched] = useState<{ county: string; n: number } | null>(null)
@@ -74,7 +75,7 @@ export default function Responder() {
       onEachFeature: (ft, layer) => {
         const n = (ft.properties as { name: string }).name
         layer.bindTooltip(n, { sticky: true, className: 'county-label', direction: 'top' })
-        layer.on('click', () => { setSelCounty(n); setSelCaller(null) })
+        layer.on('click', () => focusRef.current(n, null))
       },
     }).addTo(m)
     pinLayer.current = L.layerGroup().addTo(m)
@@ -104,7 +105,7 @@ export default function Responder() {
     if (!g) return
     visible.forEach((c) => {
       L.circleMarker([c.lat, c.lng], { pane: 'pins', radius: c.id === JAMES_CALL.id ? 8 : 6, fillColor: NEEDS[c.needs[0]].color, fillOpacity: 1, color: '#fff', weight: 2 })
-        .on('click', () => { setSelCaller(c.id); setSelCounty(c.county) }).addTo(g)
+        .on('click', () => focusRef.current(c.county, c.id)).addTo(g)
     })
   }, [visible])
 
@@ -113,13 +114,18 @@ export default function Responder() {
     visible.forEach((c) => c.needs.forEach((n) => { tally[n] = (tally[n] || 0) + 1 }))
     return Object.entries(tally).sort((a, b) => b[1] - a[1]).slice(0, 3)
   })()
-  const focusCounty = (name: string) => {
-    setSelCounty(name); setSelCaller(null)
+  const focusCounty = (name: string, callerId: number | null = null) => {
+    setSelCounty(name); setSelCaller(callerId)
     countyLayer.current?.eachLayer((l) => {
       const p = l as L.Polygon & { feature: { properties: { name: string } } }
-      if (p.feature.properties.name === name) map.current?.flyToBounds(p.getBounds(), { padding: [60, 60], maxZoom: 9.5, duration: 1.1 })
+      if (p.feature.properties.name === name) map.current?.flyToBounds(p.getBounds(), { padding: [60, 60], maxZoom: 10, duration: 1.1 })
     })
   }
+  const zoomOut = () => {
+    setSelCaller(null); setSelCounty(null)
+    map.current?.flyToBounds(BOUNDS, { padding: [10, 10], duration: 1.1 })
+  }
+  focusRef.current = focusCounty
   const caller = all.find((c) => c.id === selCaller)
   const date = dayToDate(day)
   const act = (id: number, what: string) => setActions((a) => ({ ...a, [`${id}:${what}`]: true }))
@@ -156,13 +162,13 @@ export default function Responder() {
             </div>
           )}
           <div className="sidescroll">
-            {caller ? <CallerPanel c={caller} done={actions} act={act} onClose={() => setSelCaller(null)} />
-              : selCounty ? <CountyPanel name={selCounty} calls={visible.filter((c) => c.county === selCounty)} onClose={() => setSelCounty(null)} />
+            {caller ? <CallerPanel c={caller} done={actions} act={act} onClose={zoomOut} />
+              : selCounty ? <CountyPanel name={selCounty} calls={visible.filter((c) => c.county === selCounty)} onClose={zoomOut} />
               : (
                 <>
                   <div className="pad"><h3>Live feed</h3></div>
                   {feed.map((c) => (
-                    <div key={c.id} className="feed-item" onClick={() => { setSelCaller(c.id); setSelCounty(c.county) }}>
+                    <div key={c.id} className="feed-item" onClick={() => focusCounty(c.county, c.id)}>
                       <div><b>{c.id === JAMES_CALL.id ? 'New call' : 'Call'}, {c.county} County</b><br /><span className="hint">{c.needs.map((n) => NEEDS[n].label.toLowerCase()).join(', ')} &bull; {fmtShort(dayToDate(c.day))}</span></div>
                       <button className="btn sm secondary" disabled={!!actions[`${c.id}:call`]} onClick={(ev) => { ev.stopPropagation(); act(c.id, 'call') }}>{actions[`${c.id}:call`] ? 'Calling' : 'Call'}</button>
                     </div>

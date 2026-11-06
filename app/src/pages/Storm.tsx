@@ -91,17 +91,13 @@ export default function Storm() {
     <div className="storm">
       {state !== 'none' && <video ref={vid} className={'storm-video' + (state === 'ready' ? ' ready' : '')} src="/storm.mp4" autoPlay loop playsInline preload="auto" onCanPlay={() => setState('ready')} onError={() => setState('none')} />}
       {state === 'none' && <><div className="storm-frost" aria-hidden="true" /><canvas ref={cv} className="storm-snow" aria-hidden="true" /></>}
-      <div className="storm-facts" aria-label="What happened">
-        <ul>
-          <li style={{ animationDelay: '4s' }}>Federal disaster declaration DR-4898</li>
-          <li style={{ animationDelay: '9s' }}>57,000 Nashville customers still without power nearly a week later</li>
-          <li style={{ animationDelay: '14s' }}>FEMA Individual Assistance added for 29 counties more than two months after</li>
-          <li style={{ animationDelay: '19s' }}>Disaster unemployment opened 88 days after the storm</li>
+      <div className="storm-center">
+        <p className="storm-date big">January 24, 2026</p>
+        <p className="storm-place big">Nashville, Tennessee</p>
+        <ul className="storm-bullets">
+          <li style={{ animationDelay: '4.2s' }}>FEMA Individual Assistance added for 29 counties more than two months after the storm</li>
+          <li style={{ animationDelay: '6.4s' }}>Disaster unemployment opened 88 days after the storm</li>
         </ul>
-      </div>
-      <div className={'storm-cap' + (state !== 'none' ? ' corner' : '')}>
-        <p className="storm-date">January 24, 2026</p>
-        <p className="storm-place">Nashville, Tennessee</p>
       </div>
     </div>
   )
