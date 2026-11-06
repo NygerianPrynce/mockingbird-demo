@@ -1,15 +1,15 @@
-type St = 'To do' | 'In progress' | 'Waiting'
+type St = 'To do' | 'In progress' | 'Waiting' | 'Done'
 type T = { when: string; title: string; program: string; st: St; eligible?: boolean; note: string; bring: string; action: string; href: string; due?: string }
 // A timeline: what to do, in order, with the dates that matter. Every step links to where you do it.
 const STEPS: T[] = [
-  { when: 'This week', title: 'File regular state unemployment', program: 'Jobs4TN', st: 'To do', note: 'Choose “Lack of Work,” then “Disaster related closure.” Do this first. DUA depends on it.', bring: 'SSN, last employer, last day worked', action: 'Open Jobs4TN', href: 'https://www.jobs4tn.gov' },
+  { when: 'Done', title: 'Regular state unemployment filed', program: 'Jobs4TN', st: 'Done', note: 'You told us you already filed. Keep your claim number handy, DUA depends on it.', bring: 'Your claim number', action: 'Check my claim', href: 'https://www.jobs4tn.gov' },
   { when: 'This week', title: 'Review and submit your DUA application', program: 'Tennessee DUA', st: 'In progress', eligible: true, note: 'Prepared on your call from your profile. Check every answer, then submit it yourself.', bring: 'Your prepared application', action: 'Go to Jobs4TN', href: 'https://www.jobs4tn.gov' },
   { when: '21 days after filing', title: 'Send your DUA documents', program: 'Tennessee DUA', st: 'Waiting', note: 'Upload within 21 days of filing or the application can be closed.', bring: 'Paystub or tax return, proof of employment', action: 'Upload documents', href: 'https://www.jobs4tn.gov' },
   { when: 'June 9', title: 'DUA applications close', program: 'Tennessee DUA', st: 'To do', due: 'Deadline', note: 'Last day to submit. Questions: 877-813-0950, weekdays 8 to 4:30 CT.', bring: 'Confirmation number from your filing', action: 'Check my claim', href: 'https://www.jobs4tn.gov' },
   { when: 'June 10', title: 'Apply for FEMA Individual Assistance', program: 'FEMA, DR-4898', st: 'To do', eligible: true, due: 'Deadline', note: 'Covers uninsured damage, temporary housing and essential needs. You can also apply at 800-621-3362.', bring: 'Damage photos, receipts, lease, ID', action: 'Apply on DisasterAssistance.gov', href: 'https://www.disasterassistance.gov' },
-  { when: 'Next', title: 'Rebuild with local help', program: 'SBA loan, recovery center', st: 'To do', eligible: true, note: 'Low-interest SBA disaster loans, plus Davidson County recovery services and food pantries.', bring: 'Income records, insurance status', action: 'See SBA and local help', href: 'https://disasterloanassistance.sba.gov' },
+  { when: 'Next', title: 'Rebuild with local help', program: 'SBA loan, recovery center', st: 'To do', eligible: true, note: 'Low-interest SBA disaster loans, plus Davidson County rent and utility help.', bring: 'Income records, insurance status', action: 'See SBA and local help', href: 'https://disasterloanassistance.sba.gov' },
 ]
-const cls: Record<St, string> = { 'In progress': 'blue', 'To do': 'grey', 'Waiting': 'amber' }
+const cls: Record<St, string> = { 'In progress': 'blue', 'To do': 'grey', 'Waiting': 'amber', 'Done': 'green' }
 
 export default function Plan() {
   return (
