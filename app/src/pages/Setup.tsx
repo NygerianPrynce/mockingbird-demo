@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import QRCode from 'qrcode'
-import { openRelay, relaySend, ROOM } from '../lib/relay'
+import { HOSTS, openRelay, relaySend, ROOM } from '../lib/relay'
 
 // Pre-demo setup only (#/setup). Checks the relay on this network, then links the phone.
 export default function Setup() {
@@ -8,8 +8,8 @@ export default function Setup() {
   const [qr, setQr] = useState('')
   const [relay, setRelay] = useState<'checking' | 'ok' | 'bad'>('checking')
   const [quota, setQuota] = useState<{ left: number; max: number; reset: Date } | null>(null)
-  // ntfy.sh allows 250 messages per 12 hours per IP. One full run uses about 80 (half from each device).
-  useEffect(() => { fetch('https://ntfy.sh/v1/account').then((r) => r.json()).then((a) => setQuota({ left: a.stats.messages_remaining, max: a.limits.messages, reset: new Date(a.stats.reset_at * 1000) })).catch(() => {}) }, [])
+  // The main relay allows 17,280 messages per 12 hours per IP. One full run uses about 80.
+  useEffect(() => { fetch(`${HOSTS[0]}/v1/account`).then((r) => r.json()).then((a) => setQuota({ left: a.stats.messages_remaining, max: a.limits.messages, reset: new Date(a.stats.reset_at * 1000) })).catch(() => {}) }, [])
   useEffect(() => { QRCode.toDataURL(url, { margin: 1, width: 220, color: { dark: '#002D65' } }).then(setQr) }, [url])
   useEffect(() => {
     const id = String(Math.random())
@@ -24,7 +24,7 @@ export default function Setup() {
       <p className={relay === 'bad' ? 'hs-err' : ''}>
         {relay === 'checking' && 'Checking the phone relay...'}
         {relay === 'ok' && 'Relay connected on this network.'}
-        {relay === 'bad' && 'Cannot reach the relay (ntfy.sh) from this network. Try a hotspot.'}
+        {relay === 'bad' && 'Cannot reach the relay from this network. Try a hotspot.'}
       </p>
       {quota && <p className={quota.left < 120 ? 'hs-err' : ''}>Messages left on this network: {quota.left} of {quota.max}. A full run uses about 80.{quota.left < 120 && ` Low. Switch networks (hotspot), or wait until ${quota.reset.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`}</p>}
       <p>Scan with the phone (Wi-Fi or cellular both work), allow the microphone, and leave the page open. Then run the demo from <code>#/profile</code>.</p>
