@@ -32,12 +32,12 @@ const DUA: { sec: string; rows: Row[] }[] = [
   { sec: 'A. Applicant', rows: [
     { key: 'profileFields', label: 'Full name', value: 'James Carter', src: 'profile' },
     { key: 'profileFields', label: 'Phone', value: '(615) 555-0142', src: 'profile' },
-    { key: 'profileFields', label: 'Home address', value: '412 Example St, Nashville', src: 'profile' },
+    { key: 'profileFields', label: 'Home address', value: '2301 Vanderbilt Place, Nashville', src: 'profile' },
     { key: 'profileFields', label: 'County of residence', value: 'Davidson', src: 'profile' },
     { key: 'profileFields', label: 'Household size', value: '3', src: 'profile' },
   ] },
   { sec: 'B. Work', rows: [
-    { key: 'profileFields', label: 'Employment type', value: 'Employee, paid hourly', src: 'profile' },
+    { key: 'profileFields', label: 'Employment type', value: 'Employee', src: 'profile' },
     { key: 'profileFields', label: 'Employer', value: 'Cumberland Distribution', src: 'profile' },
     { key: 'profileFields', label: 'Job', value: 'Warehouse associate', src: 'profile' },
     { key: 'lastWorked', label: 'Date last worked', value: 'January 23, 2026', src: 'call' },
@@ -61,7 +61,7 @@ const SCAN: { name: string; out: string; hit?: boolean }[] = [
   { name: 'Utility and rent help', out: 'Checked' },
   { name: 'Local recovery services', out: 'Checked' },
 ]
-const SAVED: [string, string][] = [['Name', 'James Carter'], ['County', 'Davidson'], ['Household', '3'], ['Work', 'Warehouse associate, hourly'], ['Rent or own', 'Rent']]
+const SAVED: [string, string][] = [['Name', 'James Carter'], ['County', 'Davidson'], ['Household', '3'], ['Work', 'Warehouse associate'], ['Rent or own', 'Rent']]
 
 export default function Live() {
   const e = useConversation(STEPS)
@@ -111,7 +111,7 @@ export default function Live() {
               <img src={icon} width={56} height={56} alt="" className="bob" />
               <h2>Loading James&rsquo;s profile</h2>
               <div className="bar"><i /></div>
-              <p className="muted">Davidson County &bull; household of 3 &bull; hourly warehouse work</p>
+              <p className="muted">Davidson County &bull; household of 3 &bull; warehouse work</p>
             </div>
           )}
           {stage === 'scan' && (

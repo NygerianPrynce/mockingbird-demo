@@ -3,9 +3,14 @@
 const w = window as any
 export const speechSupported = () => !!(w.SpeechRecognition || w.webkitSpeechRecognition)
 
-export function createListener(h: { onInterim: (s: string) => void; onFinal: (s: string) => void; onError: (m: string) => void }) {
+// quietMs: send the transcript as final once the words stop changing this long, instead of waiting for the browser's own (slower) end-of-speech call.
+export function createListener(h: { onInterim: (s: string) => void; onFinal: (s: string) => void; onError: (m: string) => void }, opts: { quietMs?: number } = {}) {
   let rec: any = null
   let active = false
+  let quiet: ReturnType<typeof setTimeout> | null = null
+  let last = ''
+  let sent = false
+  const clearQuiet = () => { if (quiet) { clearTimeout(quiet); quiet = null } }
   const spawn = () => {
     const C = w.SpeechRecognition || w.webkitSpeechRecognition
     if (!C) { h.onError('Speech recognition is not supported here. Use Chrome, or type instead.'); active = false; return }
@@ -13,14 +18,24 @@ export function createListener(h: { onInterim: (s: string) => void; onFinal: (s:
     rec.lang = 'en-US'
     rec.interimResults = true
     rec.continuous = false
+    last = ''; sent = false; clearQuiet()
+    const mine = rec
     rec.onresult = (e: any) => {
+      if (sent || rec !== mine) return
       let interim = '', fin = ''
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const r = e.results[i]
         if (r.isFinal) fin += r[0].transcript; else interim += r[0].transcript
       }
-      if (interim) h.onInterim(interim.trim())
-      if (fin.trim()) h.onFinal(fin.trim())
+      if (interim) {
+        h.onInterim(interim.trim())
+        last = interim.trim()
+        if (opts.quietMs) {
+          clearQuiet()
+          quiet = setTimeout(() => { quiet = null; if (!sent && last && rec === mine) { sent = true; const t = last; try { mine.abort() } catch { /* ignore */ } h.onFinal(t) } }, opts.quietMs)
+        }
+      }
+      if (fin.trim()) { clearQuiet(); sent = true; h.onFinal(fin.trim()) }
     }
     rec.onerror = (e: any) => {
       if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { active = false; h.onError('Microphone blocked. Allow it in the browser, or type instead.') }
@@ -31,7 +46,7 @@ export function createListener(h: { onInterim: (s: string) => void; onFinal: (s:
   }
   return {
     start() { if (active) return; active = true; spawn() },
-    stop() { active = false; try { rec?.abort() } catch { /* ignore */ } rec = null },
+    stop() { active = false; clearQuiet(); try { rec?.abort() } catch { /* ignore */ } rec = null },
   }
 }
 

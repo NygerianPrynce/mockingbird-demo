@@ -28,7 +28,7 @@ export default function Phone() {
       onInterim: (t) => setHeard(t),
       onFinal: (t) => { setHeard(t); relaySend({ from: 'phone', type: 'final', text: t }) },
       onError: (m) => setErr(m),
-    })
+    }, { quietMs: 850 })
     if (stRef.current === 'connected' && phase.current === 'listening' && !kpRef.current) listener.current.start(); else listener.current.stop()
   }
   useRelay((m) => {

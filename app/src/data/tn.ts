@@ -138,5 +138,5 @@ export function seedCallers(): Caller[] {
 
 export const JAMES_CALL: Caller = {
   id: 2041, county: 'Davidson', lat: 36.12, lng: -86.72, day: 4, needs: ['income', 'housing'],
-  household: 3, employment: 'hourly', status: 'prepared', duaFiled: false, consent: true, uninsuredLoss: true, simulated: false,
+  household: 3, employment: 'employee', status: 'prepared', duaFiled: false, consent: true, uninsuredLoss: true, simulated: false,
 }
