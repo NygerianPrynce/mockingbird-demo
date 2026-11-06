@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mockingbird appendix: sources, facts, Q&amp;A</title>
+<link rel="icon" href="assets/mockingbird-icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="vendor/reveal/reset.css">
+<link rel="stylesheet" href="vendor/reveal/reveal.css">
+<link rel="stylesheet" href="deck.css">
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- Index -->
+<section data-background-color="#002D65">
+  <div class="slide appx dark theme-navy">
+    <span class="tag">APPENDIX · FOR Q&amp;A</span>
+    <h2>Appendix</h2>
+    <div class="rule"></div>
+    <ul class="index-list">
+      <li><a href="#/1"><b>A1</b>Sources</a></li>
+      <li><a href="#/2"><b>A2</b>Verified facts (1 of 2)</a></li>
+      <li><a href="#/3"><b>A2</b>Verified facts (2 of 2)</a></li>
+      <li><a href="#/4"><b>A3</b>The 29 declared counties</a></li>
+      <li><a href="#/5"><b>A4</b>How the eligibility rules work</a></li>
+      <li><a href="#/6"><b>A5</b>Architecture and tools</a></li>
+      <li><a href="#/7"><b>A6</b>Privacy and identity</a></li>
+      <li><a href="#/8"><b>A7</b>Judge Q&amp;A</a></li>
+      <li><a href="#/9"><b>A8</b>Backup: demo screens</a></li>
+    </ul>
+    <p class="caption" style="margin-top:36px;"><a href="index.html">Back to the main deck</a>. Everything shown is fictional or simulated. Eligibility labels are demo rules, not an official determination.</p>
+  </div>
+</section>
+
+<!-- A1 Sources -->
+<section data-background-color="#002D65">
+  <div class="slide appx dark theme-navy">
+    <span class="tag">APPENDIX · A1</span>
+    <h2>Sources</h2>
+    <div class="rule"></div>
+    <ul class="src-list">
+      <li><b>TEMA, January 2026 Winter Weather</b><a href="https://www.tn.gov/tema/assistance/active-disasters-and-emergencies/2026-disasters/january-2026-winter-weather.html"><span>tn.gov/tema/assistance/active-disasters-and-emergencies/2026-disasters/january-2026-winter-weather.html</span></a></li>
+      <li><b>TDLWD, DUA in 29 counties (Apr 22, 2026)</b><a href="https://www.tn.gov/workforce/general-resources/news/2026/4/22/disaster-unemployment-assistance-available-in-29-tennessee-counties.html"><span>tn.gov/workforce/general-resources/news/2026/4/22/disaster-unemployment-assistance-available-in-29-tennessee-counties.html</span></a></li>
+      <li><b>TDLWD, Disaster Unemployment page</b><a href="https://www.tn.gov/workforce/unemployment/disaster-unemployment.html"><span>tn.gov/workforce/unemployment/disaster-unemployment.html</span></a></li>
+      <li><b>TDLWD, DUA documentation requirements (2025 release)</b><a href="https://www.tn.gov/workforce/general-resources/news/2025/6/26/disaster-unemployment-assistance-available-in-nine-counties.html"><span>tn.gov/workforce/general-resources/news/2025/6/26/disaster-unemployment-assistance-available-in-nine-counties.html</span></a></li>
+      <li><b>WKRN, FEMA IA added for 29 counties</b><a href="https://www.wkrn.com/news/tennessee-news/tennessees-winter-storm-disaster-declaration-amended-to-include-fema-individual-assistance/amp/"><span>wkrn.com/news/tennessee-news/tennessees-winter-storm-disaster-declaration-amended-to-include-fema-individual-assistance/amp/</span></a></li>
+      <li><b>WSMV, IA deadline (May 13, 2026)</b><a href="https://www.wsmv.com/2026/05/13/tennesseans-affected-by-deadly-january-winter-storm-have-less-than-one-month-apply-disaster-assistance-tema-says/"><span>wsmv.com/2026/05/13/tennesseans-affected-by-deadly-january-winter-storm-have-less-than-one-month-apply-disaster-assistance-tema-says/</span></a></li>
+      <li><b>WVLT, FEMA approvals (Jun 9, 2026)</b><a href="https://www.wvlt.tv/2026/06/09/deadline-apply-disaster-assistance-tn-ice-storm-is-this-week/"><span>wvlt.tv/2026/06/09/deadline-apply-disaster-assistance-tn-ice-storm-is-this-week/</span></a></li>
+      <li><b>ABC News 4, NES outages (57,000)</b><a href="https://abcnews4.com/news/nation-world/gallery/nashville-power-outages-nes-electric-service-customers-still-without-power-nearly-week-after-ice-storm-winter-weather?photo=1"><span>abcnews4.com/news/nation-world/gallery/nashville-power-outages-nes-electric-service-customers-still-without-power-nearly-week-after-ice-storm-winter-weather</span></a></li>
+      <li><b>NewsChannel 9, NES outages (22,000)</b><a href="https://newschannel9.com/news/local/gallery/nashville-power-outages-25000-nes-electric-services-customers-without-power-more-than-a-week-after-ice-storm-winter-weather?photo=1"><span>newschannel9.com/news/local/gallery/nashville-power-outages-25000-nes-electric-services-customers-without-power-more-than-a-week-after-ice-storm-winter-weather</span></a></li>
+      <li><b>GAO-20-503, FEMA Individuals and Households Program (Sept 30, 2020)</b><a href="https://www.gao.gov/products/gao-20-503"><span>gao.gov/products/gao-20-503</span></a></li>
+      <li><b>GOV.UK Design System (patterns only, no branding)</b><a href="https://design-system.service.gov.uk"><span>design-system.service.gov.uk</span></a></li>
+      <li><b>Map data</b><span>US Census cartographic boundaries (county shapes). Esri Light Gray basemap (tiles).</span></li>
+    </ul>
+  </div>
+  <aside class="notes">A1. The first nine are in the original research brief. GAO-20-503 was added on Nov 6, 2026 for the forms-burden statistic.</aside>
+</section>
+
+<!-- A2 Facts 1 -->
+<section data-background-color="#002D65">
+  <div class="slide appx dark theme-navy">
+    <span class="tag">APPENDIX · A2 (1 OF 2)</span>
+    <h2>Verified facts: the storm and the programs</h2>
+    <div class="rule"></div>
+    <table>
+      <thead><tr><th>Fact</th><th>What we state</th><th>Source</th></tr></thead>
+      <tbody>
+        <tr><td>Winter Storm Fern</td><td>Severe winter storms began Jan 22, 2026. The ice storm hit Middle Tennessee Jan 24. Federal disaster declaration FEMA DR-4898.</td><td>TEMA</td></tr>
+        <tr><td>FEMA Individual Assistance</td><td>Added for 29 Tennessee counties more than two months after the storm. Deadline to apply was June 10, 2026.</td><td>WKRN, WSMV</td></tr>
+        <tr><td>Disaster Unemployment Assistance (DUA)</td><td>TDLWD opened DUA for 29 counties on April 22, 2026, with applications open until June 9, 2026. Computed: Jan 24 to Apr 22 is 88 days.</td><td>TDLWD</td></tr>
+        <tr><td>How to apply</td><td>Through Jobs4TN. State unemployment first: select “Lack of Work,” then “Disaster related closure.” DUA applications come after, if the county is approved.</td><td>TDLWD</td></tr>
+        <tr><td>DUA documents</td><td>Due within 21 days of filing: SSN, most recent federal income tax form or paycheck stubs, and documentation showing the person was working or self-employed when the disaster occurred.</td><td>TDLWD (2025 release)</td></tr>
+        <tr><td>DUA vs regular unemployment</td><td>DUA is a federal program administered by the state. Regular unemployment and DUA cannot be paid at the same time.</td><td>TDLWD</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- A2 Facts 2 -->
+<section data-background-color="#002D65">
+  <div class="slide appx dark theme-navy">
+    <span class="tag">APPENDIX · A2 (2 OF 2)</span>
+    <h2>Verified facts: impact and the forms burden</h2>
+    <div class="rule"></div>
+    <table>
+      <thead><tr><th>Fact</th><th>What we state</th><th>Source</th></tr></thead>
+      <tbody>
+        <tr><td>Power outages</td><td>NES reported 57,000 customers still without power nearly a week after the storm, and 22,000 still out more than a week after.</td><td>ABC News 4, NewsChannel 9</td></tr>
+        <tr><td>Relief that came</td><td>FEMA approved about $23.7 million for 10,563 households in May 2026.</td><td>WVLT</td></tr>
+        <tr><td>Applicants, 2016 to 2018</td><td>5.6 million people applied for FEMA disaster assistance (4.4 million referred to the Individuals and Households Program).</td><td>GAO-20-503, Sept 30, 2020</td></tr>
+        <tr><td>Survivor confusion</td><td>FEMA, state, territory, and local officials reported that survivors “did not understand and were frustrated by” the SBA loan requirement.</td><td>GAO-20-503, Sept 30, 2020</td></tr>
+        <tr><td>Not used</td><td>The GAO page gives two different counts of ineligible applicants (about 1.7 million and about 2.4 million) and does not reconcile them, so we do not quote either.</td><td>GAO-20-503</td></tr>
+        <tr><td>Not verified, never stated</td><td>The exact screens of the live Jobs4TN claim flow. Current mailing or fax for documents. Whether any specific person qualifies. Any statistic not on this page.</td><td>n/a</td></tr>
+      </tbody>
+    </table>
+    <p class="caption" style="margin-top:14px;">GAO items were added after the original brief and read from the GAO product page on Nov 6, 2026.</p>
+  </div>
+</section>
+
+<!-- A3 Counties -->
+<section data-background-color="#002D65">
+  <div class="slide appx dark theme-navy">
+    <span class="tag">APPENDIX · A3</span>
+    <h2>The 29 counties in the FEMA IA and DUA declarations</h2>
+    <div class="rule"></div>
+    <ul class="counties">
+      <li>Benton</li><li>Carroll</li><li>Cheatham</li><li>Chester</li><li>Clay</li><li>Davidson</li><li>Decatur</li><li>Dickson</li><li>Dyer</li><li>Fayette</li>
+      <li>Hardeman</li><li>Hardin</li><li>Henderson</li><li>Hickman</li><li>Lewis</li><li>Macon</li><li>Madison</li><li>Maury</li><li>McNairy</li><li>Montgomery</li>
+      <li>Perry</li><li>Robertson</li><li>Rutherford</li><li>Shelby</li><li>Sumner</li><li>Trousdale</li><li>Wayne</li><li>Williamson</li><li>Wilson</li>
+    </ul>
+    <p class="caption" style="margin-top:28px; font-size:24px;">Source: TEMA via WKRN, April 2026. All 95 counties were designated for FEMA public assistance or emergency protective measures. The team still plans to cross-check this list against TEMA directly.</p>
+  </div>
+</section>
+
+<!-- A4 Rules -->
+<section data-background-color="#002D65">
+  <div class="slide appx dark theme-navy">
+    <span class="tag">APPENDIX · A4</span>
+    <h2>How the eligibility rules work</h2>
+    <div class="rule"></div>
+    <p class="appx-body" style="margin-bottom:22px;">The AI extracts facts from what the caller says. A small rules module, not the AI, decides the label. These are demo rules, not an official determination.</p>
+    <div class="rules-box">declared = the caller's county is one of the 29 declared counties
+
+Disaster Unemployment Assistance
+  declared AND income loss AND not retired        →  Likely eligible   (due June 9, 2026)
+
+FEMA Individual Assistance
+  declared AND (uninsured loss OR housing need OR debris need)
+                                                  →  Likely eligible   (due June 10, 2026)
+
+SBA disaster loan
+  declared AND (uninsured loss OR housing need)   →  Possibly eligible  (check SBA's current terms)
+
+Local resources                                   →  Available</div>
+    <p class="appx-body" style="margin-top:22px;">Every label says <b>likely</b> or <b>possibly</b>, never “approved,” and links back to the program's own rules. The same facts always give the same label, so results are predictable and explainable.</p>
+  </div>
+</section>
+
+<!-- A5 Architecture -->
+<section data-background-color="#002D65">
+  <div class="slide appx dark theme-navy">
+    <span class="tag">APPENDIX · A5</span>
+    <h2>Architecture and tools</h2>
+    <div class="rule"></div>
+    <table>
+      <thead><tr><th>Layer</th><th>What it is today</th></tr></thead>
+      <tbody>
+        <tr><td>Web app</td><td>React, Vite, Leaflet.</td></tr>
+        <tr><td>Hearing the caller</td><td>Browser speech recognition (Chrome, needs internet) for live transcription on screen.</td></tr>
+        <tr><td>The AI voice</td><td>Text-to-speech. Voice lines are pre-generated and cached on disk, with the browser voice as a fallback, so the demo can run offline.</td></tr>
+        <tr><td>The phone</td><td>A simulated handset: the caller's speech and keypad taps travel over the web to the demo screen instead of through a phone carrier. Production would use Twilio voice and SMS.</td></tr>
+        <tr><td>Conversation</td><td>Scripted by intent for the demo. The AI's questions and the form values are pre-written, and the caller can phrase answers any way.</td></tr>
+        <tr><td>Eligibility</td><td>A rules module decides labels and deadlines (see A4).</td></tr>
+        <tr><td>Map</td><td>US Census county boundaries, Esri Light Gray basemap, about 50 seeded simulated callers labeled simulated everywhere.</td></tr>
+        <tr><td>Roadmap</td><td>Claude for real conversation and fact extraction. Live monitoring of declarations. Twilio voice and SMS. State and county responder dashboards.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- A6 Privacy -->
+<section data-background-color="#002D65">
+  <div class="slide appx dark theme-navy">
+    <span class="tag">APPENDIX · A6</span>
+    <h2>Privacy and identity</h2>
+    <div class="rule"></div>
+    <div class="grid-2" style="grid-template-columns: 1fr 1fr; gap: 56px;">
+      <div class="col">
+        <h3 style="font-size:34px; margin-bottom:14px;">Privacy</h3>
+        <ul class="trust" style="font-size:28px;">
+          <li style="font-size:28px; padding:12px 0;">SSN and date of birth are <b>never spoken</b>. They are typed into a masked field or on the keypad.</li>
+          <li style="font-size:28px; padding:12px 0;">Map pins are at county or neighborhood level, <b>never exact home addresses</b>.</li>
+          <li style="font-size:28px; padding:12px 0;">Names and phone numbers show only for callers who <b>opted in</b>.</li>
+          <li style="font-size:28px; padding:12px 0;">The public aggregate view shows <b>counts only</b>.</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3 style="font-size:34px; margin-bottom:14px;">Identity on the call</h3>
+        <ul class="trust" style="font-size:28px;">
+          <li style="font-size:28px; padding:12px 0;">The call comes from the <b>number on file</b>, but caller ID alone is not trusted.</li>
+          <li style="font-size:28px; padding:12px 0;">The caller proves it with <b>date of birth and ZIP typed on the keypad</b>, shown only as dots. Wrong answers are rejected.</li>
+          <li style="font-size:28px; padding:12px 0;">Typed keypad entry keeps sensitive numbers out of the voice channel and the transcript.</li>
+          <li style="font-size:28px; padding:12px 0;">Something you have (your phone number) plus something you know. Production would add a <b>texted one-time code</b> and lock the account after repeated failures.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- A7 Q&A -->
+<section data-background-color="#002D65">
+  <div class="slide appx dark theme-navy">
+    <span class="tag">APPENDIX · A7</span>
+    <h2>Judge Q&amp;A</h2>
+    <div class="rule"></div>
+    <div class="qa">
+      <div class="card"><div class="q">What if cell towers are down?</div><div class="a">Messages are queued and sent as soon as the person has signal again. The pre-disaster profile means very little has to be said in a bad moment.</div></div>
+      <div class="card"><div class="q">Do you submit applications?</div><div class="a">No. We prepare, the survivor reviews and submits. There is no real integration with any government system.</div></div>
+      <div class="card"><div class="q">Is this an official eligibility decision?</div><div class="a">No. Labels say “likely eligible” using simple demo rules, with links to the program rules.</div></div>
+      <div class="card"><div class="q">How do you stop someone calling as somebody else?</div><div class="a">The call must come from the number on file, then the caller proves identity with date of birth and ZIP typed on the keypad, never spoken. Wrong answers are rejected. Production adds a texted one-time code and lockout after failed attempts.</div></div>
+      <div class="card"><div class="q">What about privacy?</div><div class="a">SSN and date of birth are never spoken. The map is county level, names show only with opt-in, and the public view is counts only.</div></div>
+      <div class="card"><div class="q">How does the AI avoid making things up?</div><div class="a">The AI extracts facts. A rules module decides eligibility labels and deadlines. The AI never says “approved.”</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- A8 Screens -->
+<section data-background-color="#002D65">
+  <div class="slide appx dark theme-navy">
+    <span class="tag">APPENDIX · A8</span>
+    <h2>Backup: the demo screens</h2>
+    <div class="rule" style="margin:14px 0 20px;"></div>
+    <div class="gallery">
+      <figure class="shot"><div class="frame"><img src="assets/screens/profile-done.png" alt="Profile complete"></div><figcaption class="caption">1 Profile: complete, ready to pre-fill</figcaption></figure>
+      <figure class="shot"><div class="frame"><img src="assets/screens/storm-out.png" alt="Storm title card"></div><figcaption class="caption">2 Storm: the title card</figcaption></figure>
+      <figure class="shot"><div class="frame"><img src="assets/screens/call-keypad.png" alt="Call with keypad"></div><figcaption class="caption">3 Call: identity on the keypad</figcaption></figure>
+      <figure class="shot"><div class="frame"><img src="assets/screens/call-eligibility.png" alt="Call with eligibility and prepared application"></div><figcaption class="caption">3 Call: likely eligible, form fills in</figcaption></figure>
+      <figure class="shot"><div class="frame"><img src="assets/screens/call-readback.png" alt="Check your answers"></div><figcaption class="caption">3 Call: check your answers</figcaption></figure>
+      <figure class="shot"><div class="frame"><img src="assets/screens/call-documents.png" alt="Documents and 21-day warning"></div><figcaption class="caption">3 Call: documents and the 21-day warning</figcaption></figure>
+      <figure class="shot"><div class="frame"><img src="assets/screens/plan.png" alt="Recovery plan"></div><figcaption class="caption">4 Plan: tasks in three time windows</figcaption></figure>
+      <figure class="shot"><div class="frame"><img src="assets/screens/map-notice.png" alt="Responder map with the food signal"></div><figcaption class="caption">5 Map: the food signal and area notice</figcaption></figure>
+      <figure class="shot"><div class="frame"><img src="assets/screens/map-pin.png" alt="Anonymized caller card"></div><figcaption class="caption">5 Map: an anonymized caller card</figcaption></figure>
+    </div>
+    <p class="caption" style="margin-top:14px;">Captured from the running demo. All people and callers are fictional or simulated.</p>
+  </div>
+</section>
+
+</div>
+</div>
+
+<script src="vendor/reveal/reveal.js"></script>
+<script src="vendor/reveal/plugin/notes/notes.js"></script>
+<script>
+  Reveal.initialize({
+    width: 1920, height: 1080, margin: 0, minScale: 0.1, maxScale: 2,
+    center: false, hash: true, controls: false, progress: true, slideNumber: false,
+    transition: 'fade', transitionSpeed: 'fast', plugins: [RevealNotes]
+  });
+</script>
+</body>
+</html>
