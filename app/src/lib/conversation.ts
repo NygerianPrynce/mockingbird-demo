@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { cancelSpeech, createListener, speak, speechSupported, warmVoice } from './speech'
+import { getDemo, setDemo } from '../store'
+import { cancelSpeech, createListener, fadeOutSpeech, speak, speechSupported, warmVoice } from './speech'
 
 // A scripted conversation driven by what the speaker means, not their exact words.
 // The AI asks step.ask. Whatever the person says (voice or typed) counts as the answer, then step.fills are revealed.
@@ -104,10 +105,17 @@ export function useConversation(steps: Step[]) {
         ;(async () => { if (await aiSay(step.keypad!.fail, run)) listen() })()
       }
     }
+    // Presenter takes over: fade the AI out, stop listening, end the conversation. Whatever is filled so far stays.
+    function wrap(keys?: string[]) {
+      if (s.phase === 'idle' || s.phase === 'done') return
+      s.run++; s.listener?.stop(); fadeOutSpeech(1200)
+      setInterim(''); setAwaiting(null); setKeyCount(0); reveal(keys); setPh('done')
+    }
     return {
+      wrap,
       enterDigits,
       warm() { const t = stepsRef.current.flatMap((x) => [x.ask, x.retry ?? '', x.danger ?? '', x.keypad?.fail ?? '']); return warmVoice(t) },
-      start() { warmVoice(stepsRef.current.map((x) => x.ask)); s.run++; s.t0 = Date.now(); s.id = 0; setLines([]); setRevealed(new Set()); setError(''); setInterim(''); ask(0) },
+      start() { if (!getDemo().startedAt) setDemo({ startedAt: Date.now() }); warmVoice(stepsRef.current.map((x) => x.ask)); s.run++; s.t0 = Date.now(); s.id = 0; setLines([]); setRevealed(new Set()); setError(''); setInterim(''); ask(0) },
       reset() { s.run++; setAwaiting(null); setKeyCount(0); cancelSpeech(); s.listener?.stop(); setLines([]); setRevealed(new Set()); setInterim(''); setError(''); setIdx(0); setPh('idle') },
       submit,
       hear: (t: string) => setInterim(t),

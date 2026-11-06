@@ -5,7 +5,7 @@ import { ConversationPanel, ConvoControls } from '../components/ConversationPane
 import { useConversation } from '../lib/conversation'
 import type { Step } from '../lib/conversation'
 import { dayToDate, fmt } from '../data/tn'
-import { setDemo } from '../store'
+import { getDemo, setDemo } from '../store'
 import { identity } from '../data/identity'
 
 // BEAT 3 + 4 (SCRIPTED BY INTENT). The caller can say anything; the AI's questions and the form values follow the script.
@@ -84,14 +84,17 @@ export default function Live() {
   const eRef = useRef(e); eRef.current = e
   const lineRef = useRef(false); lineRef.current = line
   const dialing = useRef(false)
+  const handleDial = () => {
+    const x = eRef.current
+    if (dialing.current) return
+    dialing.current = true
+    x.reset(); x.setRemote(true)
+    ring().then(() => { relaySend({ from: 'screen', type: 'connected' }); x.start(); dialing.current = false })
+  }
   useRelay((m) => {
     if (m.from !== 'phone' || !lineRef.current) return
     const x = eRef.current
-    if (m.type === 'dial' && !dialing.current) {
-      dialing.current = true
-      x.reset(); x.setRemote(true)
-      ring().then(() => { relaySend({ from: 'screen', type: 'connected' }); x.start(); dialing.current = false })
-    }
+    if (m.type === 'dial') handleDial()
     if (m.type === 'interim' && x.getPhase() === 'listening') x.hear(m.text ?? '')
     if (m.type === 'final' && x.getPhase() === 'listening' && m.text) x.submit(m.text)
     if (m.type === 'keycount') x.setKeyCount(Number(m.text) || 0)
@@ -99,6 +102,7 @@ export default function Live() {
   })
   useEffect(() => { if (line) relaySend({ from: 'screen', type: 'phase', phase: e.phase, kp: e.awaiting ? { length: e.awaiting.length, label: e.awaiting.label } : null }) }, [e.phase, e.awaiting, line])
   const openLine = async () => {
+    localStorage.setItem('mb.line', '1')
     e.setRemote(true); setLine(true)
     const info = await fetch('/api/info').then((r) => r.json()).catch(() => null) as { ips: string[]; port: string; https: boolean } | null
     const proto = info?.https ? 'https' : 'http'
@@ -106,7 +110,7 @@ export default function Live() {
     setUrls(list)
     if (list[0]) setQr(await QRCode.toDataURL(list[0], { margin: 1, width: 150, color: { dark: '#002D65' } }))
   }
-  const closeLine = () => { setLine(false); e.setRemote(false); setQr(''); setUrls([]) }
+  const closeLine = () => { localStorage.removeItem('mb.line'); setLine(false); e.setRemote(false); setQr(''); setUrls([]) }
   const [ssn, setSsn] = useState('')
   const [manual, setManual] = useState<'heard' | 'check' | 'dua' | null>(null)
   const has = (k: string) => e.revealed.has(k)
@@ -114,6 +118,12 @@ export default function Live() {
   const auto = has('readback') && !confirmed ? 'check' : has('profileFields') ? 'dua' : 'heard'
   useEffect(() => setManual(null), [auto])
   useEffect(() => { if (e.phase === 'done') setDemo({ jamesCalled: true }) }, [e.phase])
+  // The line stays open across screens once opened. If the phone dialed while the storm screen was up, answer now.
+  useEffect(() => {
+    if (localStorage.getItem('mb.line') === '1') {
+      openLine().then(() => { if (getDemo().pendingDial) { setDemo({ pendingDial: false }); handleDial() } })
+    }
+  }, [])
   const tab = manual ?? auto
   const day4 = dayToDate(4)
 

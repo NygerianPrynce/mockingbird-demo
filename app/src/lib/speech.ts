@@ -90,6 +90,20 @@ export function cancelSpeech() {
   if ('speechSynthesis' in window) speechSynthesis.cancel()
 }
 
+// Presenter takes over: fade the AI voice out and stop it.
+export function fadeOutSpeech(ms = 1200) {
+  const cur = current
+  if (!cur) { cancelSpeech(); return }
+  const a = cur.audio, start = a.volume, t0 = performance.now()
+  const step = () => {
+    const k = Math.min(1, (performance.now() - t0) / ms)
+    a.volume = Math.max(0, start * (1 - k))
+    if (k < 1) requestAnimationFrame(step); else { a.pause(); cur.done(); if (current === cur) current = null }
+  }
+  step()
+  if ('speechSynthesis' in window) speechSynthesis.cancel()
+}
+
 function speakBrowser(text: string): Promise<void> {
   return new Promise((resolve) => {
     if (!('speechSynthesis' in window)) { setTimeout(resolve, Math.min(5000, 700 + text.length * 22)); return }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Logo } from './components/Logo'
-import { getDemo, setDemo } from './store'
+import { getDemo, setDemo, useDemo } from './store'
 import Profile from './pages/Profile'
 import Live from './pages/Live'
 import Storm from './pages/Storm'
@@ -16,6 +16,14 @@ const ROUTES = [
   { path: '/responder', label: '5 Map', el: <Responder /> },
 ]
 
+function Stopwatch() {
+  const { startedAt } = useDemo()
+  const [, tick] = useState(0)
+  useEffect(() => { const id = setInterval(() => tick((x) => x + 1), 500); return () => clearInterval(id) }, [])
+  const s = startedAt ? Math.floor((Date.now() - startedAt) / 1000) : 0
+  return <span className="badge-demo" title="Demo timer. Starts on the first Start. T resets.">{Math.floor(s / 60)}:{String(s % 60).padStart(2, '0')}</span>
+}
+
 export default function App() {
   const [path, setPath] = useState(location.hash.slice(1) || '/profile')
   useEffect(() => {
@@ -29,6 +37,10 @@ export default function App() {
       if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA') return
       if (ev.key === 'h' || ev.key === 'H') document.body.classList.toggle('rec')
       if (ev.key === 'p' || ev.key === 'P') setDemo({ showCue: !getDemo().showCue })
+      const i = ROUTES.findIndex((r) => r.path === (location.hash.slice(1) || '/profile'))
+      if ((ev.key === 'n' || ev.key === 'N' || ev.key === 'ArrowRight') && i >= 0 && i < ROUTES.length - 1) location.hash = ROUTES[i + 1].path
+      if ((ev.key === 'ArrowLeft') && i > 0) location.hash = ROUTES[i - 1].path
+      if (ev.key === 't' || ev.key === 'T') setDemo({ startedAt: null })
     }
     addEventListener('keydown', k)
     return () => removeEventListener('keydown', k)
@@ -45,6 +57,7 @@ export default function App() {
             <a key={r.path} href={'#' + r.path} aria-current={r.path === route.path ? 'page' : undefined}>{r.label}</a>
           ))}
         </nav>
+        <Stopwatch />
         <span className="badge-demo">Demo, fictional data</span>
       </header>
       <main key={route.path}>{route.el}</main>

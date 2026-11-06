@@ -171,13 +171,17 @@ p { margin: 0 0 1em; }
 .tag.profile { color: var(--tn-navy); border-color: #9DB2D1; background: #fff; }
 .rec .controls, .rec .nav, .rec .badge-demo { display: none; }
 .transcript { height: 520px; }
-/* storm interlude (reversed brand: navy field, white type) */
-.storm { margin-right: 10px; min-height: calc(100vh - 56px); background: var(--tn-navy); color: #fff; display: grid; place-items: center; position: relative; transition: background .8s; }
+/* storm interlude (reversed brand: navy field, white type, falling snow) */
+.storm { margin-right: 10px; height: calc(100vh - 56px); background: var(--tn-navy); color: #fff; display: grid; place-items: center; position: relative; overflow: hidden; transition: background 1.2s; }
 .storm.dark { background: #00132b; }
-.storm.flash { background: #fff; transition: none; }
-.storm-card { max-width: 640px; padding: 32px; }
-.storm-line { font-family: var(--serif); font-size: 1.9rem; line-height: 1.3; margin: 0 0 14px; animation: slide .6s ease-out; }
-.storm-line.date { font-family: var(--font); font-size: .95rem; letter-spacing: .08em; text-transform: uppercase; color: #B9CBE3; }
+.storm-snow, .storm-video, .storm-frost { position: absolute; inset: 0; width: 100%; height: 100%; }
+.storm-video { object-fit: cover; opacity: .55; }
+.storm-frost { box-shadow: inset 0 0 160px 40px rgba(205, 225, 255, .22); pointer-events: none; }
+.storm-cap { position: relative; text-align: center; z-index: 2; }
+.storm-date { font-family: var(--serif); font-size: 3rem; margin: 0; color: #fff; }
+.storm-place { font-size: 1.1rem; letter-spacing: .12em; text-transform: uppercase; color: #B9CBE3; margin: 8px 0 0; }
+.storm-out { font-size: 1.6rem; margin: 28px 0 0; font-weight: 700; }
+.storm-hint { position: absolute; left: 20px; bottom: 16px; display: flex; gap: 10px; z-index: 3; }
 .btn.light { background: #fff; color: var(--tn-navy); border-color: #fff; }
 .storm-skip { position: absolute; right: 24px; bottom: 20px; background: none; border: 0; color: #B9CBE3; cursor: pointer; font-size: .85rem; }
 /* handset (phone page) */

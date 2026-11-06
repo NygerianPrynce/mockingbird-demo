@@ -9,6 +9,23 @@ npm install
 ```
 Use Chrome on the laptop (mic and speech recognition need Chrome or Edge). The phone: Chrome on Android or Safari on iPhone.
 
+## Presenter keys (the live show)
+| Key | What it does |
+|---|---|
+| **W** (on Profile) | Take over. The AI voice fades out, stops asking, mic goes off, profile saves as is ("Mockingbird picks up the rest by text later") |
+| **N** or Right arrow | Next screen (Profile, Storm, Call, Plan, Map) |
+| Left arrow | Previous screen |
+| **B** (on Storm) | Transformer blows, sound cuts, "Power out." |
+| **P** | Show or hide the "Say something like..." cue for the caller |
+| **H** | Hide all on-screen controls and the timer for recording |
+| **T** | Reset the demo timer (it starts on the first Start press) |
+
+Run of show: partner answers the profile questions, you interject at question 4 (rent or own and insurance), press **W**, then **N** to the Storm screen. Narrate over the snow and sound. Press **B** when you want the power to cut. Ammar dials from the phone while the Storm screen is up: the laptop jumps to the call screen, rings, and the AI answers. Then **N** through Plan and Map, moving fast.
+
+Before the demo: go to **3 Call** and press **Open the phone line** once. It stays open on this browser, so it re-opens by itself when the call screen loads. Close it there if you want laptop-only testing again.
+
+Optional real footage: save a clip as `app/public/storm.mp4`. It plays behind the snow automatically.
+
 ## 1. Laptop-only run (5 min). Do this first
 ```bash
 npm run dev
