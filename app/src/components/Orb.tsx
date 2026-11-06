@@ -47,6 +47,7 @@ varying vec3 vN; varying vec3 vV; varying float vD;
 void main(){
   float f = pow(1. - max(dot(normalize(vN), normalize(vV)), 0.), 2.2);
   vec3 col = mix(vec3(0.0,0.10,0.27), vec3(0.72,0.82,1.0), f*(0.7+uGlow*0.5)) + vec3(1.)*max(vD,0.)*(1.2+uAmp*3.);
+  col = mix(col, vec3(0.88,0.12,0.14), clamp(smoothstep(0.015, 0.11, vD) * 0.4 + f * smoothstep(0.0, 0.08, vD) * 0.25, 0., 0.5));
   gl_FragColor = vec4(col, 0.55 + f*0.45);
 }`
 export function Orb({ phase, size = 320, synthetic = false }: { phase: string; size?: number; synthetic?: boolean }) {
@@ -65,9 +66,9 @@ export function Orb({ phase, size = 320, synthetic = false }: { phase: string; s
     const coreMat = new THREE.ShaderMaterial({
       uniforms, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
       vertexShader: 'varying vec3 vN; varying vec3 vV; void main(){ vec4 mv = modelViewMatrix*vec4(position,1.); vN = normalize(normalMatrix*normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix*mv; }',
-      fragmentShader: 'uniform float uAmp; uniform float uGlow; varying vec3 vN; varying vec3 vV; void main(){ float f = max(dot(normalize(vN), normalize(vV)), 0.); float g = pow(f, 1.6); gl_FragColor = vec4(vec3(1.0, 0.10, 0.08) * g * (0.75 + uAmp*2.0 + uGlow*0.35), g); }',
+      fragmentShader: 'uniform float uAmp; uniform float uGlow; varying vec3 vN; varying vec3 vV; void main(){ float f = max(dot(normalize(vN), normalize(vV)), 0.); float g = pow(f, 1.6); gl_FragColor = vec4(vec3(1.0, 0.10, 0.08) * g * (0.14 + uAmp*0.9), g * 0.5); }',
     })
-    const core = new THREE.Mesh(new THREE.SphereGeometry(0.4, 32, 32), coreMat)
+    const core = new THREE.Mesh(new THREE.SphereGeometry(0.34, 32, 32), coreMat)
     const group = new THREE.Group(); group.add(ball, wire, core); scene.add(group)
     let raf = 0, t = 0, amp = 0, glow = 0
     const draw = () => {

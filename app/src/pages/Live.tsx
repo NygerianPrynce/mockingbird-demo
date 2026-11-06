@@ -89,7 +89,7 @@ export default function Live() {
 
   return (
     <div className="page"><div className="wide">
-      <div className="live callgrid">
+      <div className={'live callgrid morph' + (e.phase !== 'idle' ? ' active' : '')}>
         <div className="leftcol">
           <CallPanel e={e} userLabel="James" size={220} />
           {has('caller') && (
@@ -108,7 +108,7 @@ export default function Live() {
           )}
         </div>
         <section className="panel appl" aria-label="Application">
-          {stage === 'idle' && <div className="stagebox"><p className="muted">{has('caller') ? 'Verifying caller' : 'Waiting for a call'}</p></div>}
+          {stage === 'idle' && <div className="stagebox"><p className="muted">Verifying caller</p></div>}
           {stage === 'loading' && (
             <div className="stagebox slide">
               <img src={icon} width={56} height={56} alt="" className="bob" />

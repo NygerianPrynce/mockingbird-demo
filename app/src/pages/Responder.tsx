@@ -6,6 +6,7 @@ import type { Caller, Need } from '../data/tn'
 
 const RAMP = ['#E8EEF7', '#B9CBE3', '#7C9CC7', '#3A64A0', '#002D65']
 const SEED = seedCallers()
+const DAYS_PER_SEC = 2.6 // steady: Day 1 to Day 88 in about 33 seconds
 const BOUNDS: L.LatLngBoundsLiteral = [[34.9, -90.4], [36.7, -81.7]]
 
 export default function Responder() {
@@ -43,12 +44,19 @@ export default function Responder() {
     return m
   }, [visible])
 
-  // autoplay the storm from day 1 to day 88; slow at the start where the early calls come in
+  // autoplay the storm from day 1 to day 88 at one steady speed, driven by the frame clock so the scrubber moves smoothly
   useEffect(() => { const id = setTimeout(() => setPlaying(true), 1500); return () => clearTimeout(id) }, [])
   useEffect(() => {
     if (!playing) return
-    const id = setInterval(() => setT((x) => { const n = x + (x < 10 ? 0.15 : 0.4); if (n >= 88) { setPlaying(false); return 88 } return n }), 100)
-    return () => clearInterval(id)
+    let raf = 0, last = performance.now()
+    const tick = (now: number) => {
+      const dt = Math.min(0.1, (now - last) / 1000); last = now
+      let done = false
+      setT((x) => { const n = x + dt * DAYS_PER_SEC; if (n >= 88) { done = true; return 88 } return n })
+      if (done) setPlaying(false); else raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
   }, [playing])
 
   useEffect(() => {
@@ -95,8 +103,7 @@ export default function Responder() {
     g?.clearLayers()
     if (!g) return
     visible.forEach((c) => {
-      if (c.id === JAMES_CALL.id) L.circleMarker([c.lat, c.lng], { pane: 'pins', radius: 13, fill: false, color: '#002D65', weight: 2, interactive: false, className: 'pulse' }).addTo(g)
-      L.circleMarker([c.lat, c.lng], { pane: 'pins', radius: 6, fillColor: NEEDS[c.needs[0]].color, fillOpacity: 1, color: '#fff', weight: 2 })
+      L.circleMarker([c.lat, c.lng], { pane: 'pins', radius: c.id === JAMES_CALL.id ? 8 : 6, fillColor: NEEDS[c.needs[0]].color, fillOpacity: 1, color: '#fff', weight: 2 })
         .on('click', () => { setSelCaller(c.id); setSelCounty(c.county) }).addTo(g)
     })
   }, [visible])
@@ -106,6 +113,13 @@ export default function Responder() {
     visible.forEach((c) => c.needs.forEach((n) => { tally[n] = (tally[n] || 0) + 1 }))
     return Object.entries(tally).sort((a, b) => b[1] - a[1]).slice(0, 3)
   })()
+  const focusCounty = (name: string) => {
+    setSelCounty(name); setSelCaller(null)
+    countyLayer.current?.eachLayer((l) => {
+      const p = l as L.Polygon & { feature: { properties: { name: string } } }
+      if (p.feature.properties.name === name) map.current?.flyToBounds(p.getBounds(), { padding: [60, 60], maxZoom: 9.5, duration: 1.1 })
+    })
+  }
   const caller = all.find((c) => c.id === selCaller)
   const date = dayToDate(day)
   const act = (id: number, what: string) => setActions((a) => ({ ...a, [`${id}:${what}`]: true }))
@@ -136,7 +150,7 @@ export default function Responder() {
                   <p>{(sig ?? latched)!.n} callers in the last 3 days cannot get food. Recommend rerouting hot meals to this area.</p>
                   {noticeSent
                     ? <p className="ok"><b>Notice sent</b> to {(sig ?? latched)!.county} County emergency management.</p>
-                    : <div className="btnrow"><button className="btn sm" onClick={() => { setNoticeSent(true); setSelCounty(latched!.county) }}>Send area notice</button><button className="btn sm secondary" onClick={() => setSelCounty(latched!.county)}>Show on map</button></div>}
+                    : <div className="btnrow"><button className="btn sm" onClick={() => { setNoticeSent(true); focusCounty(latched!.county) }}>Send area notice</button><button className="btn sm secondary" onClick={() => focusCounty(latched!.county)}>Show on map</button></div>}
                 </div>
               )}
             </div>
@@ -161,7 +175,7 @@ export default function Responder() {
       <div className="slider">
         <button className="btn sm secondary" onClick={() => { if (t >= 88) setT(1); setPlaying((p) => !p) }} aria-label={playing ? 'Pause' : 'Play'}>{playing ? 'Pause' : t >= 88 ? 'Replay' : 'Play'}</button>
         <b>Day {day}</b><span>{fmt(date)}</span>
-        <input type="range" min={1} max={88} value={day} onChange={(e) => { setPlaying(false); setT(+e.target.value) }} aria-label="Days since storm" />
+        <input type="range" min={1} max={88} step={0.01} value={t} onChange={(e) => { setPlaying(false); setT(+e.target.value) }} aria-label="Days since storm" />
       </div>
     </div>
   )
@@ -171,16 +185,17 @@ function CallerPanel({ c, done, act, onClose }: { c: Caller; done: Record<string
   const progs = eligibility(c)
   const isJames = c.id === JAMES_CALL.id
   const btn = (what: string, label: string, after: string, primary = false) => (
-    <button className={'btn sm' + (primary ? '' : ' secondary')} disabled={!!done[`${c.id}:${what}`]} onClick={() => act(c.id, what)}>{done[`${c.id}:${what}`] ? after : label}</button>
+    <button className={'btn sm' + (primary ? ' primary-wide' : ' secondary')} disabled={!!done[`${c.id}:${what}`]} onClick={() => act(c.id, what)}>{done[`${c.id}:${what}`] ? after : label}</button>
   )
   return (
     <div className="pad slide">
       <button className="btn sm secondary" onClick={onClose}>Back</button>
       <h2 style={{ marginTop: 12 }}>{isJames ? 'James Carter' : `Caller ${c.id}`}</h2>
       <p className="hint">{c.county} County &bull; {fmt(dayToDate(c.day))} &bull; {STATUS_LABEL[c.status]}</p>
-      <p><b>Needs:</b> {c.needs.map((n) => NEEDS[n].label).join(', ')}<br /><b>Household:</b> {c.household}<br /><b>Work:</b> {c.employment}<br /><b>DUA filed:</b> {c.duaFiled ? 'Yes' : 'No'}</p>
+      <b>Needs</b><ul className="needlist">{c.needs.map((n) => <li key={n}>{NEEDS[n].label}</li>)}</ul>
+      <p><b>Household:</b> {c.household}<br /><b>Work:</b> {c.employment}<br /><b>DUA filed:</b> {c.duaFiled ? 'Yes' : 'No'}</p>
       {isJames && <p className="inset" style={{ margin: '0 0 12px' }}>(615) 555-0142</p>}
-      <div className="btnrow" style={{ marginBottom: 16 }}>
+      <div className="btnrow stack" style={{ marginBottom: 16 }}>
         {btn('call', 'Have Mockingbird call', 'Calling now', true)}
         {btn('text', c.needs.includes('food') ? 'Text meal sites' : 'Text resources', 'Text sent')}
         {btn('resolve', 'Mark resolved', 'Resolved')}

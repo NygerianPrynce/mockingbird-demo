@@ -25,6 +25,16 @@ function Stopwatch() {
   return <span className="badge-demo" title="Demo timer. Starts on the first Start. T resets.">{Math.floor(s / 60)}:{String(s % 60).padStart(2, '0')}</span>
 }
 
+function Dock() {
+  const key = (k: string) => window.dispatchEvent(new KeyboardEvent('keydown', { key: k }))
+  const B = ({ k, label }: { k: string; label: string }) => <button type="button" onClick={() => key(k)}>{label}</button>
+  return (
+    <div className="dock" role="toolbar" aria-label="Presenter controls">
+      <B k="ArrowLeft" label="Back" /><B k="s" label="Start call" /><B k="k" label="Answer" /><B k="w" label="Take over" /><B k="r" label="Reset" /><B k="ArrowRight" label="Next screen" /><B k="h" label="Hide" />
+    </div>
+  )
+}
+
 export default function App() {
   const [path, setPath] = useState(location.hash.slice(1) || '/profile')
   useEffect(() => {
@@ -70,6 +80,7 @@ export default function App() {
       </header>
       {needsClick && <div className="arm">Click once to enable sound</div>}
       <main key={route.path}>{route.el}</main>
+      <Dock />
     </>
   )
 }

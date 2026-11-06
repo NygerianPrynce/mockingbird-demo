@@ -21,6 +21,12 @@ export default function Plan() {
           <div><b>Disaster Unemployment Assistance is now open for Davidson County.</b> Applications close June 9. Your application is ready. Review and submit it.</div>
         </div>
       </div>
+      <div className="plan-stats">
+        <div><span>Eligible for</span><b>3 programs</b><small>DUA, FEMA Individual Assistance, SBA loan</small></div>
+        <div><span>Next deadline</span><b>June 9</b><small>48 days left to submit DUA</small></div>
+        <div><span>Documents to gather</span><b>3</b><small>SSN, paystub or tax return, proof of employment</small></div>
+        <div><span>Still need help with</span><b>Food</b><small>Sent to responders. Pantry locations by text.</small></div>
+      </div>
       <ol className="timeline">
         {STEPS.map((s, i) => (
           <li key={s.title} className={i % 2 ? 'down' : 'up'}>
@@ -34,6 +40,15 @@ export default function Plan() {
           </li>
         ))}
       </ol>
+      <div className="plan-help">
+        <h2>Help near you</h2>
+        <ul>
+          <li><b>Jobs4TN</b><span>877-813-0950, weekdays 8 to 4:30 CT</span></li>
+          <li><b>FEMA</b><span>DisasterAssistance.gov or 800-621-3362</span></li>
+          <li><b>Warming centers</b><span>Fairgrounds, Madison, Southeast community centers</span></li>
+          <li><b>Food</b><span>Second Harvest pantries in Davidson County</span></li>
+        </ul>
+      </div>
     </div></div>
   )
 }

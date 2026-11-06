@@ -95,6 +95,7 @@ function rng(seed: number) {
   return () => ((s = (s * 1664525 + 1013904223) % 4294967296) / 4294967296)
 }
 const WEIGHTS: Record<string, number> = Object.fromEntries(DECLARED.map((c) => [c, 2])) // spread across the whole declaration
+for (const f of COUNTY_FEATURES) if (!(f.properties.name in WEIGHTS)) WEIGHTS[f.properties.name] = 1 // calls come from across the whole state
 WEIGHTS.Davidson = 7; WEIGHTS.Shelby = 5; WEIGHTS.Rutherford = 4; WEIGHTS.Williamson = 3; WEIGHTS.Wilson = 3; WEIGHTS.Sumner = 3
 export function seedCallers(): Caller[] {
   const r = rng(1776)
@@ -104,7 +105,7 @@ export function seedCallers(): Caller[] {
   const emps: Employment[] = ['self-employed', 'hourly', 'employee', 'retired']
   const statuses: Status[] = ['new', 'new', 'prepared', 'referred', 'resolved']
   const list: Caller[] = []
-  for (let i = 0; i < 90; i++) {
+  for (let i = 0; i < 130; i++) {
     const county = pool[Math.floor(r() * pool.length)]
     const [la, ln] = centroids[county]
     const needs = needSets[Math.floor(r() * needSets.length)]

@@ -42,15 +42,16 @@ export default function Profile() {
     return () => removeEventListener('keydown', k)
   }, [e])
   usePhoneCall(e)
+  const active = e.phase !== 'idle'
   return (
     <div className="page"><div className="wide">
-      <h1>Your recovery profile</h1>
-      <div className="live">
+      {active && <h1 className="slide">Building your Mockingbird profile</h1>}
+      <div className={'live morph' + (active ? ' active' : '')}>
         <CallPanel e={e} userLabel="James" />
-        <section className="panel" aria-label="Profile">
+        <section className="panel profpanel" aria-label="Profile">
           <header><h3>James&rsquo;s profile</h3><span className={'tag ' + (done ? 'green' : 'amber')}>{done ? 'Saved' : 'Building'}</span></header>
           <div className="body">
-            <dl className="summary" style={{ marginBottom: 0 }}>
+            <dl className="summary">
               {FIELDS.map(([k, l, v]) => {
                 const on = have(k)
                 return (
@@ -61,9 +62,8 @@ export default function Profile() {
               })}
             </dl>
             {e.revealed.has('programs') && (
-              <div className="inset slide" style={{ marginBottom: 0 }}>
+              <div className="inset slide">
                 <h3 style={{ marginBottom: 2 }}>Can start for you</h3>
-                <p className="hint" style={{ marginBottom: 6 }}>We prepare these. You review and submit.</p>
                 <div className="chips">{PROGRAMS.map((p) => <span key={p}>{p}</span>)}</div>
               </div>
             )}
