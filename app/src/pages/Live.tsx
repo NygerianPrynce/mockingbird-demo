@@ -22,9 +22,9 @@ const STEPS: Step[] = [
   { ask: 'Have you filed for regular unemployment yet?', cue: 'Yes, I have.', fills: ['filed', 'duaStatus'] },
   { ask: 'To confirm: laid off by the storm, last worked January 23rd, about seven hundred a week, already filed. Correct?',
     cue: 'Yes, that\u2019s right.', expect: 'yes', retry: 'What should I fix?', onAsk: ['readback'], fills: ['confirmed'] },
-  { ask: 'Your application is ready for you to review and submit. Within 21 days, you\u2019ll need your Social Security number, a paystub, and proof of employment. Anything else you need right now?',
-    cue: 'We\u2019re behind on rent.', onAsk: ['docs'], fills: ['rentNeed'] },
-  { ask: 'Got it. I\u2019ve flagged rent help for Davidson County, and I\u2019ll text you the next steps. Take care, James.', cue: '', expect: 'none', onAsk: ['reminder'] },
+  { ask: 'Your application is ready. Within 21 days, you\u2019ll need your Social Security number, a paystub, and proof of employment. When you\u2019re available, go to the Mockingbird platform to review and submit it. Anything else you need right now?',
+    cue: 'No, that\u2019s all. Thank you.', onAsk: ['docs'] },
+  { ask: 'Thank you for using Mockingbird. Have a nice day.', cue: '', expect: 'none', onAsk: ['reminder'] },
 ]
 
 type Row = { key: string; label: string; value: string; src: 'profile' | 'call' }
@@ -98,7 +98,7 @@ export default function Live() {
                   {!has('verified') && <span className="tag amber">{has('verifying') ? 'Verifying' : 'Not verified yet'}</span>}
                   {has('verified') && <span className="tag green">Identity verified</span>}
                   {has('eligibility') && <span className="tag blue">Eligible: DUA</span>}
-                  {has('rentNeed') && <span className="tag amber">Need: rent help</span>}
+                  
                 </>
               )}
             </div>
