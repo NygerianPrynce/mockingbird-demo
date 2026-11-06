@@ -12,7 +12,7 @@ import { identity } from '../data/identity'
 const STEPS: Step[] = [
   { ask: 'Welcome to the Mockingbird hotline. If you are in immediate danger, hang up and call 911. Are you in immediate danger?', cue: 'No, we\u2019re safe.', expect: 'no', danger: 'Hang up and call 911 now. Stay safe.', onAsk: ['caller'] },
   { ask: 'Do you know your Mockingbird ID?', cue: 'No, I don\u2019t remember it.', onAsk: ['verifying'] },
-  { ask: 'No problem. Enter your date of birth on the keypad. Don\u2019t say it out loud.', cue: '(Tap your date of birth on the keypad)',
+  { ask: 'No problem. Enter your date of birth on the keypad.', cue: '(Tap your date of birth on the keypad)',
     keypad: { length: 8, label: 'Date of birth: MM DD YYYY', verify: (d) => d === identity.dob, fail: 'That doesn\u2019t match. Try again.', demo: () => identity.dob }, fills: ['dobOk'] },
   { ask: 'Now your ZIP code.', cue: '(Tap your ZIP code on the keypad)',
     keypad: { length: 5, label: 'Home ZIP code', verify: (d) => d === identity.zip, fail: 'That doesn\u2019t match. Try again.', demo: () => identity.zip }, fills: ['verified'] },

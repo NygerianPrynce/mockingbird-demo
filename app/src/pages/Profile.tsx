@@ -7,7 +7,7 @@ import { identity } from '../data/identity'
 // BEAT 1 (SCRIPTED BY INTENT). Whatever the speaker says counts as the answer; the profile fills with the script's values.
 const STEPS: Step[] = [
   { ask: 'Hi, I\u2019m Mockingbird. Let\u2019s set up your recovery profile before anything happens, just by talking. What\u2019s your name and home address?', cue: 'James Carter, 412 Example Street, Nashville.', fills: ['name', 'address', 'county'] },
-  { ask: 'Enter your date of birth on the keypad. Don\u2019t say it out loud.', cue: '(Tap a date of birth on the keypad)', keypad: { length: 8, label: 'Date of birth: MM DD YYYY', verify: (d) => { identity.dob = d; return true }, fail: '', demo: () => '03141991' }, fills: ['dob'] },
+  { ask: 'Enter your date of birth on the keypad.', cue: '(Tap a date of birth on the keypad)', keypad: { length: 8, label: 'Date of birth: MM DD YYYY', verify: (d) => { identity.dob = d; return true }, fail: '', demo: () => '03141991' }, fills: ['dob'] },
   { ask: 'Who lives with you, and what do you do for work?', cue: 'My wife and our little boy. I work at a warehouse, paid hourly.', fills: ['household', 'job'] },
   { ask: 'Do you rent or own? Any insurance on it?', cue: 'I rent, and no, I don\u2019t have renters insurance.', fills: ['tenure', 'insurance'] },
   { ask: 'Done. Your profile is saved. Your Mockingbird ID is M B, 2 0 4 1. I\u2019ll ask the rest by text later. Here\u2019s what this can start for you.', cue: '', expect: 'none', onAsk: ['programs', 'mbid'] },
