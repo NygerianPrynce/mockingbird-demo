@@ -2,8 +2,8 @@ import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { getLevel } from '../lib/speech'
 
-// The Mockingbird voice indicator: a 3D glass-like sphere whose surface ripples with the AI's voice.
-// It calms while listening and breathes when idle. The phone has no audio, so it uses a synthetic pulse.
+// The Mockingbird voice indicator: a navy wireframe sphere with a red core. The surface warbles with the AI's voice.
+// The phone has no audio, so it uses a synthetic pulse.
 const NOISE = `
 vec3 mod289(vec3 x){return x-floor(x*(1./289.))*289.;}
 vec4 mod289(vec4 x){return x-floor(x*(1./289.))*289.;}
@@ -28,117 +28,47 @@ float snoise(vec3 v){
   vec4 m=max(.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.); m=m*m;
   return 42.*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
 }`
-const COMMON = `varying vec3 vN; varying vec3 vV; varying vec3 vP;`
-const SHELL_V = `
+const VERT = `
 uniform float uTime; uniform float uAmp;
-${COMMON}
+varying vec3 vN; varying vec3 vV; varying float vD;
 ${NOISE}
 void main(){
-  float n = snoise(normal*1.5 + vec3(0., uTime*0.6, uTime*0.35));
-  float n2 = snoise(normal*3.2 - vec3(uTime*0.9, 0., uTime*0.5));
-  float d = (n*0.65 + n2*0.35) * (0.035 + uAmp*0.30);
-  vec3 p = position + normal*d;
-  vP = p;
-  vec4 mv = modelViewMatrix*vec4(p,1.);
-  vN = normalize(normalMatrix*normal);
-  vV = normalize(-mv.xyz);
-  gl_Position = projectionMatrix*mv;
-}`
-const SHELL_F = `
-uniform float uGlow;
-${COMMON}
-void main(){
-  float f = 1. - max(dot(normalize(vN), normalize(vV)), 0.);
-  float rim = pow(f, 1.1);
-  vec3 col = mix(vec3(0.90,0.94,1.0), vec3(1.0), rim);
-  col -= vec3(0.05,0.03,0.0) * pow(f, 4.);       // thin darker edge like frosted glass
-  gl_FragColor = vec4(col, 0.10 + rim*0.9);
-}`
-const CORE_V = `
-${COMMON}
-void main(){
-  vP = position;
-  vec4 mv = modelViewMatrix*vec4(position,1.);
+  float n = snoise(normal*1.6 + vec3(0., uTime*0.7, uTime*0.4));
+  float n2 = snoise(normal*3.4 - vec3(uTime*1.1, 0., uTime*0.6));
+  float d = (n*0.6 + n2*0.4) * (0.06 + uAmp*0.85);
+  vD = d;
+  vec4 mv = modelViewMatrix*vec4(position + normal*d,1.);
   vN = normalize(normalMatrix*normal); vV = normalize(-mv.xyz);
   gl_Position = projectionMatrix*mv;
 }`
-const CORE_F = `
-uniform float uTime; uniform float uAmp;
-${COMMON}
-${NOISE}
+const FRAG = `
+uniform float uAmp; uniform float uGlow;
+varying vec3 vN; varying vec3 vV; varying float vD;
 void main(){
-  float sp = uTime*(0.35 + uAmp*2.2);
-  vec3 q = vP*0.95;
-  float c = cos(sp*0.6), s = sin(sp*0.6);
-  q.xz = mat2(c,-s,s,c)*q.xz;
-  float n = snoise(q + vec3(0., sp*0.5, 0.));
-  n += 0.55*snoise(q*1.9 - vec3(sp*0.7, 0., sp*0.3));
-  n = n*0.5 + 0.5;
-  vec3 black = vec3(0.0, 0.0, 0.06);
-  vec3 blue = vec3(0.02, 0.05, 0.85);
-  vec3 cyan = vec3(0.0, 0.88, 1.0);
-  vec3 col = mix(black, blue, smoothstep(0.2, 0.48, n));
-  col = mix(col, cyan, smoothstep(0.5, 0.82, n));
-  float lines = smoothstep(0.88, 1.0, sin(n*60. + sp*3.)) * 0.18;   // fine engraved lines
-  col -= lines;
-  float edge = pow(1. - max(dot(normalize(vN), normalize(vV)), 0.), 3.);
-  col += edge*0.25;
-  gl_FragColor = vec4(col, 1.);
+  float f = pow(1. - max(dot(normalize(vN), normalize(vV)), 0.), 2.2);
+  vec3 col = mix(vec3(0.0,0.10,0.27), vec3(0.72,0.82,1.0), f*(0.7+uGlow*0.5)) + vec3(1.)*max(vD,0.)*(1.2+uAmp*3.);
+  gl_FragColor = vec4(col, 0.55 + f*0.45);
 }`
-const PART_V = `
-uniform float uTime; uniform float uAmp;
-attribute float aSeed;
-void main(){
-  vec3 p = position * (1. + uAmp*0.9*aSeed + 0.02*sin(uTime*1.3 + aSeed*20.));
-  vec4 mv = modelViewMatrix*vec4(p,1.);
-  gl_PointSize = 1.6 + aSeed*1.4 + uAmp*2.;
-  gl_Position = projectionMatrix*mv;
-}`
-const PART_F = `
-void main(){
-  vec2 c = gl_PointCoord - .5;
-  if (dot(c,c) > .25) discard;
-  gl_FragColor = vec4(0.35, 0.62, 0.95, 0.65);
-}`
-
 export function Orb({ phase, size = 320, synthetic = false }: { phase: string; size?: number; synthetic?: boolean }) {
   const host = useRef<HTMLDivElement>(null)
   const ph = useRef(phase); ph.current = phase
   useEffect(() => {
     const el = host.current!
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1))
-    renderer.setSize(size, size)
-    el.appendChild(renderer.domElement)
-    const scene = new THREE.Scene()
-    const cam = new THREE.PerspectiveCamera(35, 1, 0.1, 50); cam.position.z = 5.0
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); renderer.setSize(size, size); el.appendChild(renderer.domElement)
+    const scene = new THREE.Scene(); const cam = new THREE.PerspectiveCamera(35, 1, 0.1, 50); cam.position.z = 5.2
     const uniforms = { uTime: { value: 0 }, uAmp: { value: 0 }, uGlow: { value: 0 } }
-    const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.84, 32), new THREE.ShaderMaterial({ uniforms, vertexShader: CORE_V, fragmentShader: CORE_F }))
-    core.renderOrder = 1
-    const shellMat = new THREE.ShaderMaterial({ uniforms, vertexShader: SHELL_V, fragmentShader: SHELL_F, transparent: true, depthWrite: false })
-    const shell = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 48), shellMat)
-    shell.renderOrder = 2
-    // speckle around the silhouette
-    const N = 900, pos = new Float32Array(N * 3), seed = new Float32Array(N)
-    for (let i = 0; i < N; i++) {
-      const u = Math.random() * 2 - 1, th = Math.random() * Math.PI * 2, r = 1.02 + Math.random() * 0.22 * Math.random()
-      const k = Math.sqrt(1 - u * u)
-      pos.set([r * k * Math.cos(th), r * u, r * k * Math.sin(th)], i * 3); seed[i] = Math.random()
-    }
-    const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pos, 3)); pg.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1))
-    const pts = new THREE.Points(pg, new THREE.ShaderMaterial({ uniforms, vertexShader: PART_V, fragmentShader: PART_F, transparent: true, depthWrite: false }))
-    const body = new THREE.Group(); body.add(core, shell, pts)
-    // thin cyan arcs and faint rings, always facing the viewer
-    const halo = new THREE.Group()
-    const arcs: THREE.Line[] = []
-    const mk = (r: number, a0: number, len: number, col: number, op: number) => {
-      const P: THREE.Vector3[] = []
-      for (let i = 0; i <= 48; i++) { const a = a0 + (len * i) / 48; P.push(new THREE.Vector3(Math.cos(a) * r, Math.sin(a) * r, 0)) }
-      const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(P), new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: op })); halo.add(l); return l
-    }
-    ;[[1.75, 0.3, 1.0], [2.0, 2.6, 0.7], [1.6, 4.4, 0.8]].forEach(([r, a0, len]) => arcs.push(mk(r, a0, len, 0x1fc8e8, 0.9)))
-    ;[1.5, 1.95, 2.4].forEach((r) => mk(r, 0, Math.PI * 2, 0x9aa7b8, 0.18))
-    scene.add(body, halo)
+    const mat = new THREE.ShaderMaterial({ uniforms, vertexShader: VERT, fragmentShader: FRAG, transparent: true, depthWrite: false })
+    const ball = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 48), mat)
+    const wire = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 5), new THREE.ShaderMaterial({ uniforms, vertexShader: VERT, fragmentShader: FRAG, wireframe: true, transparent: true, opacity: 0.25 }))
+    wire.scale.setScalar(1.18)
+    const coreMat = new THREE.ShaderMaterial({
+      uniforms, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      vertexShader: 'varying vec3 vN; varying vec3 vV; void main(){ vec4 mv = modelViewMatrix*vec4(position,1.); vN = normalize(normalMatrix*normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix*mv; }',
+      fragmentShader: 'uniform float uAmp; uniform float uGlow; varying vec3 vN; varying vec3 vV; void main(){ float f = max(dot(normalize(vN), normalize(vV)), 0.); float g = pow(f, 1.6); gl_FragColor = vec4(vec3(1.0, 0.10, 0.08) * g * (0.75 + uAmp*2.0 + uGlow*0.35), g); }',
+    })
+    const core = new THREE.Mesh(new THREE.SphereGeometry(0.4, 32, 32), coreMat)
+    const group = new THREE.Group(); group.add(ball, wire, core); scene.add(group)
     let raf = 0, t = 0, amp = 0, glow = 0
     const draw = () => {
       t += 0.016
@@ -146,17 +76,15 @@ export function Orb({ phase, size = 320, synthetic = false }: { phase: string; s
       let lv = speaking ? (synthetic ? 0.3 + 0.3 * Math.abs(Math.sin(t * 7.3) * Math.sin(t * 2.1)) : getLevel()) : 0
       if (speaking && !synthetic && lv < 0.02) lv = 0.08 + 0.08 * Math.abs(Math.sin(t * 5))
       const target = speaking ? lv : listening ? 0.05 + 0.03 * Math.sin(t * 2.4) : 0.02 + 0.015 * Math.sin(t * 1.2)
-      amp += (target - amp) * (target > amp ? 0.35 : 0.12)
-      glow += ((speaking ? 1 : listening ? 0.5 : 0.2) - glow) * 0.06
+      amp += (target - amp) * (target > amp ? 0.35 : 0.12); glow += ((speaking ? 1 : listening ? 0.5 : 0.2) - glow) * 0.06
       uniforms.uTime.value = t; uniforms.uAmp.value = amp; uniforms.uGlow.value = glow
-      body.rotation.y = t * 0.22; body.rotation.x = Math.sin(t * 0.3) * 0.18
-      body.scale.setScalar(1 + amp * 0.12)
-      arcs.forEach((l, i) => { l.rotation.z = t * (0.5 + i * 0.25) * (i % 2 ? -1 : 1); l.scale.setScalar(1 + amp * (0.25 + i * 0.1)); (l.material as THREE.LineBasicMaterial).opacity = 0.35 + glow * 0.6 })
-      renderer.render(scene, cam)
-      raf = requestAnimationFrame(draw)
+      group.rotation.y = t * 0.25; group.rotation.x = Math.sin(t * 0.3) * 0.2; wire.rotation.y = -t * 0.18
+      ball.scale.setScalar(1 + amp * 0.22)
+      core.scale.setScalar(1 + amp * 1.6 + 0.06 * Math.sin(t * 2.2))
+      renderer.render(scene, cam); raf = requestAnimationFrame(draw)
     }
     draw()
-    return () => { cancelAnimationFrame(raf); renderer.dispose(); renderer.forceContextLoss(); core.geometry.dispose(); shell.geometry.dispose(); shellMat.dispose(); pg.dispose(); renderer.domElement.remove() }
+    return () => { cancelAnimationFrame(raf); renderer.dispose(); renderer.forceContextLoss(); ball.geometry.dispose(); wire.geometry.dispose(); mat.dispose(); coreMat.dispose(); core.geometry.dispose(); renderer.domElement.remove() }
   }, [size, synthetic])
   return <div ref={host} style={{ width: size, height: size }} aria-hidden="true" />
 }

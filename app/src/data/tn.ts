@@ -64,13 +64,13 @@ export function eligibility(c: Pick<Caller, 'county' | 'needs' | 'employment' | 
   const declared = DECLARED.includes(c.county)
   const out: Program[] = []
   if (declared && c.needs.includes('income') && c.employment !== 'retired') {
-    out.push({ key: 'DUA', name: 'Tennessee Disaster Unemployment Assistance', label: 'Likely eligible', deadline: DUA_DEADLINE, detail: 'Lost work or self-employment income and county is in the declaration.' })
+    out.push({ key: 'DUA', name: 'Tennessee Disaster Unemployment Assistance', label: 'Eligible', deadline: DUA_DEADLINE, detail: 'Lost work or self-employment income and county is in the declaration.' })
   }
   if (declared && (c.uninsuredLoss || c.needs.includes('housing') || c.needs.includes('debris'))) {
-    out.push({ key: 'FEMA', name: 'FEMA Individual Assistance', label: 'Likely eligible', deadline: FEMA_DEADLINE, detail: 'County is in the declaration and there is uninsured damage or loss.' })
+    out.push({ key: 'FEMA', name: 'FEMA Individual Assistance', label: 'Eligible', deadline: FEMA_DEADLINE, detail: 'County is in the declaration and there is uninsured damage or loss.' })
   }
   if (declared && (c.uninsuredLoss || c.needs.includes('housing'))) {
-    out.push({ key: 'SBA', name: 'SBA disaster loan', label: 'Possibly eligible', detail: 'Check current SBA deadline and terms.' })
+    out.push({ key: 'SBA', name: 'SBA disaster loan', label: 'Eligible', detail: 'Check current SBA deadline and terms.' })
   }
   out.push({ key: 'LOCAL', name: 'Local resources', label: 'Available', detail: 'Recovery centers, local emergency management, Community Compass.' })
   return out

@@ -1,10 +1,11 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { CallPanel } from '../components/ConversationPanel'
 import { useConversation } from '../lib/conversation'
 import type { Step } from '../lib/conversation'
 import { usePhoneCall } from '../lib/useCall'
 import { setDemo } from '../store'
 import { identity } from '../data/identity'
+import icon from '../assets/mockingbird-icon.svg'
 
 // BEAT 3 + 4 (SCRIPTED BY INTENT). The caller can say anything; the AI's questions and the form values follow the script.
 const STEPS: Step[] = [
@@ -55,60 +56,125 @@ const DUA: { sec: string; rows: Row[] }[] = [
     { key: 'duaStatus', label: 'DUA status', value: 'Not open yet for Davidson. We will tell you the moment it opens.', src: 'call' },
   ] },
 ]
+const SCAN: { name: string; out: string; hit?: boolean }[] = [
+  { name: 'Disaster Unemployment Assistance', out: 'Eligible. Start here', hit: true },
+  { name: 'FEMA Individual Assistance', out: 'Eligible, next' },
+  { name: 'SBA disaster loan', out: 'Eligible, later' },
+  { name: 'SNAP food assistance', out: 'Checked' },
+  { name: 'Utility and rent help', out: 'Checked' },
+  { name: 'Local recovery services', out: 'Checked' },
+]
+const SAVED: [string, string][] = [['Name', 'James Carter'], ['County', 'Davidson'], ['Household', '3'], ['Work', 'Warehouse associate, hourly'], ['Rent or own', 'Rent']]
+
 export default function Live() {
   const e = useConversation(STEPS)
   usePhoneCall(e)
   const has = (k: string) => e.revealed.has(k)
   const confirmed = has('confirmed')
   useEffect(() => { if (e.phase === 'done') setDemo({ jamesCalled: true }) }, [e.phase])
+
+  // the right side follows the call: loading profile, scanning programs, the DUA form, then saved to the profile
+  const stage = has('docs') ? 'saved' : has('profileFields') ? 'form' : has('situation') ? 'scan' : has('verified') ? 'loading' : 'idle'
+  const [scanN, setScanN] = useState(0)
+  const [tuck, setTuck] = useState(false)
+  useEffect(() => {
+    if (stage !== 'scan') { if (stage === 'idle') setScanN(0); return }
+    const id = setInterval(() => setScanN((n) => Math.min(SCAN.length, n + 1)), 650)
+    return () => clearInterval(id)
+  }, [stage])
+  useEffect(() => {
+    if (stage === 'saved') { setTuck(false); const id = setTimeout(() => setTuck(true), 2600); return () => clearTimeout(id) }
+    setTuck(false)
+  }, [stage])
+
   return (
     <div className="page"><div className="wide">
       <div className="live callgrid">
         <div className="leftcol">
-          <CallPanel e={e} userLabel="James" size={200} />
-          <div className="idcard">
-            {has('danger') && <div className="warning" style={{ margin: 0 }}><span className="bang" aria-hidden="true">!</span><div>Immediate danger reported. Caller told to call 911.</div></div>}
-            {!has('danger') && (
-              <>
-                <b>{has('caller') ? 'Number recognized' : 'Incoming call'}</b>
-                <span className="hint">(615) 555-0142 &bull; Davidson County</span>
-                {has('caller') && !has('verified') && <span className="tag amber">{has('verifying') ? 'Verifying' : 'Not verified yet'}</span>}
-                {has('verified') && <span className="tag green">Identity verified</span>}
-                {has('eligibility') && <span className="tag blue">Likely eligible: DUA</span>}
-                {has('foodNeed') && <span className="tag amber">Need: food</span>}
-              </>
-            )}
-          </div>
-        </div>
-        <section className="panel appl" aria-label="Prepared DUA application">
-          <header><h3>Disaster Unemployment Assistance</h3><span className="tag grey">Prepared for James to review and submit</span><span className="caption" style={{ marginLeft: 'auto' }}>Demo, not the Jobs4TN site</span></header>
-          <div className="body">
-            {has('trap') && <div className="inset slide trapbox"><b>First:</b> file regular state unemployment. Pick &ldquo;Lack of Work,&rdquo; then &ldquo;Disaster related closure.&rdquo; DUA is a separate federal benefit, so apply for it too.</div>}
-            <div className="dua-grid">
-              {DUA.map((s) => (
-                <div key={s.sec}>
-                  <div className="sec-title">{s.sec}</div>
-                  {s.rows.map((r) => {
-                    const on = has(r.key)
-                    const green = on && r.src === 'call' && confirmed
-                    return (
-                      <div key={r.label} className={'field ' + (!on ? 'pending' : r.src === 'profile' ? '' : green ? 'green' : 'amber')}>
-                        <span className="k">{r.label}</span><span className="v">{on ? r.value : '...'}</span>
-                        <span>{on ? (r.src === 'profile' ? <span className="tag profile">From profile</span> : <span className="caption">{green ? 'Confirmed' : 'Confirm'}</span>) : ''}</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              ))}
+          <CallPanel e={e} userLabel="James" size={220} />
+          {has('caller') && (
+            <div className="idcard">
+              {has('danger') ? <div className="warning" style={{ margin: 0 }}><span className="bang" aria-hidden="true">!</span><div>Immediate danger reported. Caller told to call 911.</div></div> : (
+                <>
+                  <b>Number recognized</b>
+                  <span className="hint">(615) 555-0142 &bull; Davidson County</span>
+                  {!has('verified') && <span className="tag amber">{has('verifying') ? 'Verifying' : 'Not verified yet'}</span>}
+                  {has('verified') && <span className="tag green">Identity verified</span>}
+                  {has('eligibility') && <span className="tag blue">Eligible: DUA</span>}
+                  {has('foodNeed') && <span className="tag amber">Need: food</span>}
+                </>
+              )}
             </div>
-            {has('docs') && (
-              <div className="docs slide">
-                <div className="sec-title">E. Documents, due 21 days after you file</div>
-                <div className="docrow"><span>Social Security number <i>typed securely, never spoken</i></span><span>Paystub or tax return</span><span>Proof of employment</span></div>
+          )}
+        </div>
+        <section className="panel appl" aria-label="Application">
+          {stage === 'idle' && <div className="stagebox"><p className="muted">{has('caller') ? 'Verifying caller' : 'Waiting for a call'}</p></div>}
+          {stage === 'loading' && (
+            <div className="stagebox slide">
+              <img src={icon} width={56} height={56} alt="" className="bob" />
+              <h2>Loading James&rsquo;s profile</h2>
+              <div className="bar"><i /></div>
+              <p className="muted">Davidson County &bull; household of 3 &bull; hourly warehouse work</p>
+            </div>
+          )}
+          {stage === 'scan' && (
+            <div className="stagebox slide">
+              <h2>Checking programs that could help</h2>
+              <ul className="scan">
+                {SCAN.map((r, i) => {
+                  const done = i < scanN
+                  return (
+                    <li key={r.name} className={(done ? 'done ' : '') + (done && r.hit ? 'hit' : '')}>
+                      <span className="dotspin" aria-hidden="true">{done ? '\u2713' : ''}</span><span className="nm">{r.name}</span>
+                      <span className="res">{done ? r.out : i === scanN ? 'Checking' : ''}</span>
+                    </li>
+                  )
+                })}
+              </ul>
+              {scanN >= 1 && <div className="suggest slide"><b>Suggested: Disaster Unemployment Assistance.</b> Your warehouse closed because of the storm.</div>}
+            </div>
+          )}
+          {stage === 'form' && (
+            <>
+              <header><h3>Disaster Unemployment Assistance</h3><span className="tag grey">Prepared for James to review and submit</span></header>
+              <div className="body">
+                {has('trap') && <div className="inset slide trapbox"><b>First:</b> file regular state unemployment. Pick &ldquo;Lack of Work,&rdquo; then &ldquo;Disaster related closure.&rdquo; DUA is a separate federal benefit, so apply for it too.</div>}
+                <div className="dua-grid">
+                  {DUA.map((sec) => (
+                    <div key={sec.sec}>
+                      <div className="sec-title">{sec.sec}</div>
+                      {sec.rows.map((r) => {
+                        const on = has(r.key)
+                        const green = on && r.src === 'call' && confirmed
+                        return (
+                          <div key={r.label} className={'field ' + (!on ? 'pending' : r.src === 'profile' ? '' : green ? 'green' : 'amber')}>
+                            <span className="k">{r.label}</span><span className="v">{on ? r.value : '...'}</span>
+                            <span>{on ? (r.src === 'profile' ? <span className="tag profile">From profile</span> : <span className="caption">{green ? 'Confirmed' : 'Confirm'}</span>) : ''}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
               </div>
-            )}
-            {has('reminder') && <div className="sms slide" style={{ marginBottom: 0 }}><b>Texts queued:</b> warming centers, food pantries, document reminders, and how to photograph damage.</div>}
-          </div>
+            </>
+          )}
+          {stage === 'saved' && (
+            <div className="savedwrap">
+              <div className={'formcard' + (tuck ? ' tuck' : '')}>
+                <div className="stagebox"><span className="tag green">Form saved</span><h2>Disaster Unemployment Assistance</h2><p className="muted">Eligible &bull; ready for James to review and submit</p></div>
+              </div>
+              {!tuck && <img src={icon} width={64} height={64} alt="" className="flybird" />}
+              <div className={'profilecard' + (tuck ? ' show' : '')}>
+                <h2>James&rsquo;s profile</h2>
+                <dl className="summary">
+                  {SAVED.map(([k, v]) => <div className="row" key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
+                  <div className="row newrow"><dt>Applications</dt><dd><b>Disaster Unemployment Assistance</b><br /><span className="hint">Saved just now. Ready to submit.</span></dd></div>
+                </dl>
+                <div className="docrow"><span>Within 21 days of filing: Social Security number <i>typed securely</i></span><span>Paystub or tax return</span><span>Proof of employment</span></div>
+              </div>
+            </div>
+          )}
         </section>
       </div>
     </div></div>

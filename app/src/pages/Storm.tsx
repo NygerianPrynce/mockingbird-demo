@@ -40,32 +40,28 @@ export default function Storm() {
   const cv = useRef<HTMLCanvasElement>(null)
   const au = useRef<ReturnType<typeof makeAudio> | null>(null)
   const vid = useRef<HTMLVideoElement>(null)
-  const [video, setVideo] = useState<boolean | null>(null)
+  const [state, setState] = useState<'loading' | 'ready' | 'none'>('loading')
 
+  // no clip? fall back to snow and synthesized wind
   useEffect(() => {
-    let dead = false
-    fetch('/storm.mp4', { method: 'HEAD' }).then((r) => {
-      const ok = r.ok && (r.headers.get('content-type') ?? '').startsWith('video')
-      if (dead) return
-      setVideo(ok)
-      if (!ok) { au.current = makeAudio(); au.current.ctx.resume(); au.current.fadeIn() }
-    }).catch(() => setVideo(false))
-    return () => { dead = true; au.current?.stop() }
-  }, [])
+    if (state !== 'none') return
+    au.current = makeAudio(); au.current.ctx.resume(); au.current.fadeIn()
+    return () => au.current?.stop()
+  }, [state])
 
   // play the clip with its own sound; if the browser blocks sound, play it muted rather than not at all
   useEffect(() => {
     const v = vid.current
-    if (!v || !video) return
+    if (!v) return
     v.muted = false
     v.play().catch(() => { v.muted = true; v.play().catch(() => {}) })
-  }, [video])
+  }, [])
 
   // The phone can dial while this screen is up: jump to the call screen and let it pick up.
   useRelay((m) => { if (m.from === 'phone' && m.type === 'dial') { setDemo({ pendingDial: true }); location.hash = NEXT } })
 
   useEffect(() => {
-    if (video !== false) return
+    if (state !== 'none') return
     const c = cv.current!, g = c.getContext('2d')!
     let w = 0, h = 0, raf = 0
     const flakes = Array.from({ length: 220 }, () => ({ x: Math.random(), y: Math.random(), r: 0.8 + Math.random() * 2.8, v: 0.4 + Math.random() * 1.2, d: Math.random() * Math.PI * 2 }))
@@ -83,13 +79,13 @@ export default function Storm() {
     }
     tick()
     return () => { cancelAnimationFrame(raf); removeEventListener('resize', size) }
-  }, [video])
+  }, [state])
 
   return (
     <div className="storm">
-      {video && <video ref={vid} className="storm-video" src="/storm.mp4" autoPlay loop playsInline />}
-      {video === false && <><div className="storm-frost" aria-hidden="true" /><canvas ref={cv} className="storm-snow" aria-hidden="true" /></>}
-      <div className={'storm-cap' + (video ? ' corner' : '')}>
+      {state !== 'none' && <video ref={vid} className={'storm-video' + (state === 'ready' ? ' ready' : '')} src="/storm.mp4" autoPlay loop playsInline preload="auto" onCanPlay={() => setState('ready')} onError={() => setState('none')} />}
+      {state === 'none' && <><div className="storm-frost" aria-hidden="true" /><canvas ref={cv} className="storm-snow" aria-hidden="true" /></>}
+      <div className={'storm-cap' + (state !== 'none' ? ' corner' : '')}>
         <p className="storm-date">January 24, 2026</p>
         <p className="storm-place">Nashville, Tennessee</p>
       </div>

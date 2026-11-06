@@ -6,7 +6,6 @@ import Live from './pages/Live'
 import Storm from './pages/Storm'
 import Phone from './pages/Phone'
 import Setup from './pages/Setup'
-import Orbs from './pages/Orbs'
 import Plan from './pages/Plan'
 import Responder from './pages/Responder'
 
@@ -56,7 +55,6 @@ export default function App() {
   }, [])
   if (path === '/phone') return <Phone />
   if (path === '/setup') return <Setup />
-  if (path === '/orbs') return <Orbs />
   const route = ROUTES.find((r) => r.path === path) ?? ROUTES[0]
   return (
     <>
@@ -64,12 +62,11 @@ export default function App() {
       <header className="topbar">
         <Logo />
         <nav className="nav" aria-label="Main">
-          {ROUTES.map((r) => (
-            <a key={r.path} href={'#' + r.path} aria-current={r.path === route.path ? 'page' : undefined}>{r.label}</a>
+          {['Services', 'Unemployment', 'Disaster relief', 'Housing and food', 'Health', 'Contact'].map((l) => (
+            <a key={l} className="fake" href="#" onClick={(e) => e.preventDefault()}>{l}</a>
           ))}
         </nav>
         <Stopwatch />
-        <span className="badge-demo">Demo, fictional data</span>
       </header>
       {needsClick && <div className="arm">Click once to enable sound</div>}
       <main key={route.path}>{route.el}</main>
